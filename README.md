@@ -1,2 +1,2 @@
 # AppointmentSystemBackend
-预约平台Web应用的后端仓库
+预约平台Web应用项目的后端仓库
