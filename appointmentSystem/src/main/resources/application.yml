@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: appointmentSystem
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/appointment_system?useSSL=false
+    username: root
+    password: Ckp12345678
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: io.github.abdofficehour.appointmentsystem.pojo
