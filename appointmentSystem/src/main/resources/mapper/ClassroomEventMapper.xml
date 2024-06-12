@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="io.github.abdofficehour.appointmentsystem.mapper.ClassroomEventMapper">
+    <resultMap id="UserInfoResult" type="io.github.abdofficehour.appointmentsystem.pojo.ClassroomEvent">
+        <id column="id" property="id"/>
+        <result column="appointmentDate" property="appointmentDate"/>
+        <result column="startTime" property="startTime"/>
+        <result column="endTime" property="endTime"/>
+        <result column="applicant" property="applicant"/>
+        <result column="classroom" property="classroom"/>
+        <result column="isMedia" property="isMedia"/>
+        <result column="isComputer" property="isComputer"/>
+        <result column="isSound" property="isSound"/>
+        <result column="aim" property="aim" typeHandler="io.github.abdofficehour.appointmentsystem.pojo.enumclass.AimTypeHandler" jdbcType="VARCHAR"/>
+        <result column="events" property="events"/>
+        <result column="approve" property="approve"/>
+        <result column="state" property="state"/>
+    </resultMap>
+
+    <insert id="insertClassroomEvent">
+        insert into classroomevent
+        (appointmentDate, startTime, endTime, applicant, classroom, isMedia, isComputer, isSound, aim, events, approver, state)
+        value
+        (
+         #{appointmentDate},
+         #{startTime},
+         #{endTime},
+         #{applicant},
+         #{classroom},
+         #{isMedia},
+         #{isComputer},
+         #{isSound},
+         #{aim,typeHandler=io.github.abdofficehour.appointmentsystem.pojo.enumclass.AimTypeHandler,jdbcType=VARCHAR},
+         #{events},
+         #{approve},
+         #{state}
+        )
+    </insert>
+
+</mapper>

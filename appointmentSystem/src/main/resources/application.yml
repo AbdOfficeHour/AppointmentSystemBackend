@@ -8,6 +8,15 @@ spring:
     password: Ckp12345678
     driver-class-name: com.mysql.cj.jdbc.Driver
 
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+
 mybatis:
   mapper-locations: classpath:mapper/*.xml
   type-aliases-package: io.github.abdofficehour.appointmentsystem.pojo
+
+custom:
+  config:
+    main-app-url: http://localhost:3000
+    token-url: /auth/token

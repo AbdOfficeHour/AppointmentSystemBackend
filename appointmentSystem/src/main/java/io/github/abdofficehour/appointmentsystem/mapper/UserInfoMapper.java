@@ -8,4 +8,6 @@ import java.util.List;
 @Mapper
 public interface UserInfoMapper {
     public List<UserInfo> findAll();
+
+    public UserInfo selectById(String id);
 }

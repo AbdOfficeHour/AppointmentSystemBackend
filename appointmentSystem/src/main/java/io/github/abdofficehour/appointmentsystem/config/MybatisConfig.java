@@ -1,5 +1,7 @@
 package io.github.abdofficehour.appointmentsystem.config;
 
+import io.github.abdofficehour.appointmentsystem.pojo.enumclass.Aim;
+import io.github.abdofficehour.appointmentsystem.pojo.enumclass.AimTypeHandler;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.annotation.MapperScan;
@@ -18,6 +20,11 @@ public class MybatisConfig {
         SqlSessionFactoryBean sessionFactory = new SqlSessionFactoryBean();
         sessionFactory.setDataSource(dataSource);
         sessionFactory.setMapperLocations(new PathMatchingResourcePatternResolver().getResources("classpath:mapper/*.xml"));
+
+        org.apache.ibatis.session.Configuration configuration = new org.apache.ibatis.session.Configuration();
+        configuration.getTypeHandlerRegistry().register(Aim.class, AimTypeHandler.class);
+
+        sessionFactory.setConfiguration(configuration);
         return sessionFactory.getObject();
     }
 

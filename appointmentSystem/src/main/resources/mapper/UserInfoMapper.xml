@@ -12,4 +12,9 @@
     <select id="findAll" resultMap="UserInfoResult">
         SELECT * FROM userinfo
     </select>
+
+    <select id="selectById" resultMap="UserInfoResult">
+        SELECT * FROM userinfo
+        WHERE id = #{id}
+    </select>
 </mapper>

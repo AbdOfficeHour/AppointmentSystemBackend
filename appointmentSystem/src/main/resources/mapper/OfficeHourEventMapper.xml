@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="io.github.abdofficehour.appointmentsystem.mapper.OfficeHourEventMapper">
+    <resultMap id="UserInfoResult" type="io.github.abdofficehour.appointmentsystem.pojo.OfficeHourEvent">
+        <id column="id" property="id"/>
+        <result column="appointmentDate" property="appointmentDate"/>
+        <result column="startTime" property="startTime"/>
+        <result column="endTime" property="endTime"/>
+        <result column="student" property="student"/>
+        <result column="teacher" property="teacher"/>
+        <result column="note" property="note"/>
+        <result column="question" property="question"/>
+        <result column="refuseResult" property="refuseResult"/>
+        <result column="workSummary" property="workSummary"/>
+        <result column="state" property="state"/>
+    </resultMap>
+
+    <insert id="insertOfficeHourEvent">
+        insert into officehourevent
+        (appointmentDate, startTime, endTime, student, teacher, note, question, refuseResult, workSummary, state)
+        value
+        (#{appointmentDate},#{startTime},#{endTime},#{student},#{teacher},#{note},#{question},#{refuseResult},#{workSummary},#{state})
+    </insert>
+
+</mapper>

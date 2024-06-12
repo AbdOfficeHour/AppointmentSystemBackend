@@ -1,3 +1,12 @@
+create table userinfo
+(
+    id       varchar(255) not null comment 'Primary Key'
+        primary key,
+    email    varchar(255) not null comment 'Email',
+    username varchar(255) not null comment 'Username',
+    phone    varchar(255) not null comment 'Phone'
+);
+
 create table classroom
 (
     id             int auto_increment comment 'Primary Key'
@@ -38,7 +47,9 @@ create table officehourevent
     question        text         null comment 'Question',
     refuseResult    text         null comment 'Refuse Result',
     workSummary     text         null comment 'Work Summary',
-    state           int          not null comment 'State'
+    state           int          not null comment 'State',
+    foreign key (student) references userinfo(id),
+    foreign key (teacher) references userinfo(id)
 )
     comment 'Office Hour Event';
 
@@ -72,15 +83,6 @@ create table teacherclassification
     name varchar(255) not null comment 'Name'
 )
     comment 'Teacher Classification';
-
-create table userinfo
-(
-    id       varchar(255) not null comment 'Primary Key'
-        primary key,
-    email    varchar(255) not null comment 'Email',
-    username varchar(255) not null comment 'Username',
-    phone    varchar(255) not null comment 'Phone'
-);
 
 create table classroomevent
 (
@@ -164,13 +166,13 @@ create index teacherid
 
 create table userclassification
 (
-    classification int auto_increment comment 'Classification'
-        primary key,
+    classification int comment 'Classification',
     user_id        varchar(255) not null comment 'User ID',
     constraint userclassification_ibfk_1
         foreign key (classification) references teacherclassification (id),
     constraint userclassification_ibfk_2
-        foreign key (user_id) references userinfo (id)
+        foreign key (user_id) references userinfo (id),
+    primary key (classification,user_id)
 )
     comment 'User Classification';
 
