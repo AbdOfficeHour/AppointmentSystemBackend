@@ -32,7 +32,7 @@ public class TableInfoService {
 
     /**
      * 获取officehour选择器
-     * @return
+     * @return TeacherClassificationSchema列表 用于记录officeHour教师类型对应教师
      */
     public List<TeacherClassificationSchema> getOfficeHourPicker(){
         // 读取所有的teacher相关的classification
@@ -65,7 +65,7 @@ public class TableInfoService {
 
     /**
      * 获取classroom选择器
-     * @return
+     * @return 还没做完 //todo 完成教师选择器
      */
     public List<Map<String,String>> getClassroomPicker(){
 
@@ -112,7 +112,7 @@ public class TableInfoService {
 
 
             }else{
-                // 如果有就田添加
+                // 如果有就添加
             }
         }
 

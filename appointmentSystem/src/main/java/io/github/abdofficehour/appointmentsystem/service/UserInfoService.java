@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
 
 @Service
 public class UserInfoService {
@@ -32,7 +31,7 @@ public class UserInfoService {
 
     /**
      * 根据用户信息查找权限
-     * @return
+     * @return 用户所有权限
      */
     public HashMap<String,List<String>> SearchAuthorityByUser(String id){
         HashMap<String, List<String>> authority = new HashMap<>();
@@ -47,7 +46,7 @@ public class UserInfoService {
 
     /**
      * 模糊搜索查询学生
-     * @return
+     * @return UserInfo对象列表，表示查询到的所有学生
      */
     public List<UserInfo> SearchUserBySearchData(String searchData){
         return userInfoMapper.selectAllByIdList("%"+searchData+"%");

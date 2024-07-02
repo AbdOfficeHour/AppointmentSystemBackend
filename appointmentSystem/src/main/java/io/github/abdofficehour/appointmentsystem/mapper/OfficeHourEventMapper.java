@@ -8,7 +8,7 @@ import java.util.List;
 
 @Mapper
 public interface OfficeHourEventMapper {
-    public void insertOfficeHourEvent(OfficeHourEvent officeHourEvent);
+    void insertOfficeHourEvent(OfficeHourEvent officeHourEvent);
 
-    public List<OfficeHourEvent> selectOfficeHourEventByTeacherIdAndFor14Days(String teacherId, LocalDateTime startTime, LocalDateTime endTime);
+    List<OfficeHourEvent> selectOfficeHourEventByTeacherIdAndFor14Days(String teacherId, LocalDateTime startTime, LocalDateTime endTime);
 }

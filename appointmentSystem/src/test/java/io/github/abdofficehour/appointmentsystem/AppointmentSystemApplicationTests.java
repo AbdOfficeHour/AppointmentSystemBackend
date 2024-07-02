@@ -72,6 +72,7 @@ class AppointmentSystemApplicationTests {
         classroomEvent.setApprove("bbb");
         classroomEvent.setState(1);
 
+        // TODO 研究一下为什么有警告
         classroomEventMapper.insertClassroomEvent(classroomEvent);
     }
 

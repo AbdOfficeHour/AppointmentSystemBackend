@@ -6,5 +6,5 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface TeacherTimeTableMapper {
-    public List<TeacherTimeTable> selectTeacherTimeTable(String teacherId, LocalDateTime first_appointmentDate, LocalDateTime last_appointmentDate);
+    List<TeacherTimeTable> selectTeacherTimeTable(String teacherId, LocalDateTime first_appointmentDate, LocalDateTime last_appointmentDate);
 }
