@@ -23,17 +23,35 @@
         (#{appointmentDate},#{startTime},#{endTime},#{student},#{teacher},#{note},#{question},#{refuseResult},#{workSummary},#{state})
     </insert>
 
+    <insert id="insertBatch">
+        insert into officehourevent
+        (appointmentDate, startTime, endTime, student, teacher, note, question, refuseResult, workSummary, state)
+        values
+            <foreach collection="officeHourEvents" item="officeHourEvent" separator=",">
+                (#{officeHourEvent.appointmentDate},
+                 #{officeHourEvent.startTime},
+                 #{officeHourEvent.endTime},
+                 #{officeHourEvent.student},
+                 #{officeHourEvent.teacher},
+                 #{officeHourEvent.note},
+                 #{officeHourEvent.question},
+                 #{officeHourEvent.refuseResult},
+                 #{officeHourEvent.workSummary},
+                 #{officeHourEvent.state})
+            </foreach>
+    </insert>
+
     <select id="selectOfficeHourEventByTeacherIdAndFor14Days" resultMap="UserInfoResult">
          SELECT * FROM officehourevent
         <where>
-             officehourevent.teacher = #{teacher}
+             officehourevent.teacher = #{teacherId}
              AND
-             officehourevent.appointmentDate &lt; #{startTime}
+             officehourevent.appointmentDate &lt; #{endTime}
              AND
-             officehourevent.appointmentDate &gt;= #{endTime}
+             officehourevent.appointmentDate &gt;= #{startTime}
         </where>
         ORDER BY
-        officehourevent.appointmentDate ASC,
+        officehourevent.appointmentDate ASC
     </select>
 
 </mapper>

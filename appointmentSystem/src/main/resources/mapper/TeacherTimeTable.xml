@@ -20,7 +20,16 @@
             teachertimetable.appointmentDate &gt;= #{first_appointmentDate}
         </where>
         ORDER BY
-        teachertimetable.appointmentDate ASC,
+        teachertimetable.appointmentDate ASC
     </select>
+
+    <insert id="insertBatch">
+        insert into teachertimetable
+        (appointmentDate, startTime, endTime, teacherid)
+        values
+        <foreach collection="timeTables" item="timeTable" separator=",">
+            (#{timeTable.appointmentDate},#{timeTable.startTime},#{timeTable.endTime},#{timeTable.teacherId})
+        </foreach>
+    </insert>
 
 </mapper>

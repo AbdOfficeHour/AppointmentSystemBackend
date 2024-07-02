@@ -34,6 +34,7 @@ public class TableController {
         return new ResponseMap(0,"获取成功",classificationSchemaList);
     }
 
+    //TODO 完成教师时间表检索
     @Operation(summary = "检索教师时间表")
     @GetMapping("/officehour/{teacherId}")
     public ResponseMap getTeacherTimeTable(@PathVariable String teacherId){

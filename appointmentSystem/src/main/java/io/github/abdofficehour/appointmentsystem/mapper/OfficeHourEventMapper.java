@@ -10,5 +10,7 @@ import java.util.List;
 public interface OfficeHourEventMapper {
     void insertOfficeHourEvent(OfficeHourEvent officeHourEvent);
 
+    void insertBatch(List<OfficeHourEvent> officeHourEvents);
+
     List<OfficeHourEvent> selectOfficeHourEventByTeacherIdAndFor14Days(String teacherId, LocalDateTime startTime, LocalDateTime endTime);
 }
