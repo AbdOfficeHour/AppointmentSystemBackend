@@ -6,6 +6,7 @@ import io.github.abdofficehour.appointmentsystem.mapper.UserInfoMapper;
 import io.github.abdofficehour.appointmentsystem.pojo.ClassroomEvent;
 import io.github.abdofficehour.appointmentsystem.pojo.OfficeHourEvent;
 import io.github.abdofficehour.appointmentsystem.pojo.enumclass.Aim;
+import io.github.abdofficehour.appointmentsystem.service.TableInfoService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -24,6 +25,9 @@ class AppointmentSystemApplicationTests {
 
     @Autowired
     ClassroomEventMapper classroomEventMapper;
+
+    @Autowired
+    TableInfoService tableInfoService;
 
     @Test
     void contextLoads() {
@@ -71,4 +75,19 @@ class AppointmentSystemApplicationTests {
         classroomEventMapper.insertClassroomEvent(classroomEvent);
     }
 
+    @Test
+    void testUserInfoMapper(){
+        System.out.println(userInfoMapper.searchRole("20223803053"));
+        System.out.println(userInfoMapper.searchAuth("20223803053"));
+    }
+
+    @Test
+    void testUserSearch(){
+        System.out.println(userInfoMapper.selectAllByIdList("%001%"));
+    }
+
+    @Test
+    void testGetOfficeHourPicker(){
+        tableInfoService.getOfficeHourPicker();
+    }
 }

@@ -17,4 +17,44 @@
         SELECT * FROM userinfo
         WHERE id = #{id}
     </select>
+
+    <select id="searchRole" resultType="string">
+        SELECT r.role_name FROM userinfo
+        LEFT JOIN appointment_system.userrole ON userrole.user_id = userinfo.id
+        LEFT JOIN appointment_system.role r on userrole.role_id = r.id
+        WHERE userinfo.id = #{id}
+        
+    </select>
+    <select id="searchAuth" resultType="string">
+        SELECT c.credit_name FROM userinfo
+        LEFT JOIN appointment_system.userrole ON userrole.user_id = userinfo.id
+        LEFT JOIN appointment_system.role r on userrole.role_id = r.id
+        LEFT JOIN appointment_system.rolecredit r2 on r.id = r2.role_id
+        LEFT JOIN appointment_system.credit c on r2.credit_id = c.id
+        WHERE userinfo.id = #{id}
+
+    </select>
+
+    <select id="selectAllByIdList" resultMap="UserInfoResult">
+        SELECT * FROM userinfo
+        LEFT JOIN appointment_system.userrole ON userrole.user_id = userinfo.id
+        LEFT JOIN appointment_system.role r ON userrole.role_id = r.id
+        <where>
+            (userinfo.id LIKE #{searchData}
+            OR
+            userinfo.username LIKE #{searchData})
+            AND
+            r.id = 2
+        </where>
+
+    </select>
+
+    <select id="selectAllClassification" resultType="io.github.abdofficehour.appointmentsystem.pojo.schema.ClassificationSchema">
+        SELECT t.name as classification,userinfo.id as teacherId, userinfo.username as teacherName FROM userinfo
+        LEFT JOIN appointment_system.userclassification ON userinfo.id = userclassification.user_id
+        LEFT JOIN appointment_system.teacherclassification t on t.id = userclassification.classification
+        LEFT JOIN appointment_system.userrole u on userinfo.id = u.user_id
+        WHERE
+            u.role_id = 1
+    </select>
 </mapper>

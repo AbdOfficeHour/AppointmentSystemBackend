@@ -5,6 +5,10 @@ import io.github.abdofficehour.appointmentsystem.pojo.UserInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Objects;
+
 @Service
 public class UserInfoService {
 
@@ -24,6 +28,29 @@ public class UserInfoService {
             userInfo = null;
         }
         return userInfo;
+    }
+
+    /**
+     * 根据用户信息查找权限
+     * @return
+     */
+    public HashMap<String,List<String>> SearchAuthorityByUser(String id){
+        HashMap<String, List<String>> authority = new HashMap<>();
+        try{
+            authority.put("role",userInfoMapper.searchRole(id));
+            authority.put("credit",userInfoMapper.searchAuth(id));
+        }catch (Exception e){
+            authority = null;
+        }
+        return authority;
+    }
+
+    /**
+     * 模糊搜索查询学生
+     * @return
+     */
+    public List<UserInfo> SearchUserBySearchData(String searchData){
+        return userInfoMapper.selectAllByIdList("%"+searchData+"%");
     }
 
 }

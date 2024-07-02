@@ -37,18 +37,22 @@ public class RestRequestService {
 
         String url = properties.getMainAppUrl() + properties.getTokenUrl() + String.format("?token=%s",token);
 
-        ResponseEntity<String> responseEntity = restTemplate.getForEntity(url,String.class);
+        try {
+            ResponseEntity<String> responseEntity = restTemplate.getForEntity(url, String.class);
 
 
-        String responseStatus = responseEntity.getStatusCode().toString();
-        if (!Objects.equals(responseStatus, "200 OK")){
+            String responseStatus = responseEntity.getStatusCode().toString();
+            if (!Objects.equals(responseStatus, "200 OK")) {
+                return "";
+            }
+
+            String responseBody = responseEntity.getBody();
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.readTree(responseBody);
+
+            return jsonNode.get("data").get("id").asText();
+        }catch (Exception e){
             return "";
         }
-
-        String responseBody = responseEntity.getBody();
-        ObjectMapper objectMapper = new ObjectMapper();
-        JsonNode jsonNode = objectMapper.readTree(responseBody);
-
-        return jsonNode.get("data").get("id").asText();
     }
 }

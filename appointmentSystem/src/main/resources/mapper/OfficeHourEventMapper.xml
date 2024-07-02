@@ -23,4 +23,17 @@
         (#{appointmentDate},#{startTime},#{endTime},#{student},#{teacher},#{note},#{question},#{refuseResult},#{workSummary},#{state})
     </insert>
 
+    <select id="selectOfficeHourEventByTeacherIdAndFor14Days" resultMap="UserInfoResult">
+         SELECT * FROM officehourevent
+        <where>
+             officehourevent.teacher = #{teacher}
+             AND
+             officehourevent.appointmentDate &lt; #{startTime}
+             AND
+             officehourevent.appointmentDate &gt;= #{endTime}
+        </where>
+        ORDER BY
+        officehourevent.appointmentDate ASC,
+    </select>
+
 </mapper>

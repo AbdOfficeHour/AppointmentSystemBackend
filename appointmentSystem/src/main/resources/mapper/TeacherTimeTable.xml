@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="io.github.abdofficehour.appointmentsystem.mapper.TeacherTimeTableMapper">
+    <resultMap id="TeacherTimeTableResult" type="io.github.abdofficehour.appointmentsystem.pojo.TeacherTimeTable">
+        <id column="id" property="id"/>
+        <result column="teacherid" property="teacherId"/>
+        <result column="appointmentDate" property="appointmentDate"/>
+        <result column="startTime" property="startTime"/>
+        <result column="endTime" property="endTime"/>
+    </resultMap>
+
+    <select id="selectTeacherTimeTable" resultMap="TeacherTimeTableResult">
+        SELECT * FROM teachertimetable
+        <where>
+            teachertimetable.teacherid = #{teacherId}
+            AND
+            teachertimetable.appointmentDate &lt; #{last_appointmentDate}
+            AND
+            teachertimetable.appointmentDate &gt;= #{first_appointmentDate}
+        </where>
+        ORDER BY
+        teachertimetable.appointmentDate ASC,
+    </select>
+
+</mapper>
