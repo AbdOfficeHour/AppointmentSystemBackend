@@ -1,7 +1,7 @@
 package io.github.abdofficehour.appointmentsystem.mapper;
 
-import io.github.abdofficehour.appointmentsystem.pojo.UserInfo;
-import io.github.abdofficehour.appointmentsystem.pojo.schema.ClassificationSchema;
+import io.github.abdofficehour.appointmentsystem.pojo.data.UserInfo;
+import io.github.abdofficehour.appointmentsystem.pojo.schema.teacherClassification.TeacherClassificationSchema;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.*;
@@ -18,5 +18,5 @@ public interface UserInfoMapper {
 
     List<UserInfo> selectAllByIdList(String searchData);
 
-    List<ClassificationSchema> selectAllClassification();
+    List<TeacherClassificationSchema> selectAllClassification();
 }

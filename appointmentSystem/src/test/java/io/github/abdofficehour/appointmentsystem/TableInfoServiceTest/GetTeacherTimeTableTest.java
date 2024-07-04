@@ -2,9 +2,9 @@ package io.github.abdofficehour.appointmentsystem.TableInfoServiceTest;
 
 import io.github.abdofficehour.appointmentsystem.mapper.OfficeHourEventMapper;
 import io.github.abdofficehour.appointmentsystem.mapper.TeacherTimeTableMapper;
-import io.github.abdofficehour.appointmentsystem.pojo.OfficeHourEvent;
-import io.github.abdofficehour.appointmentsystem.pojo.TeacherTimeTable;
-import io.github.abdofficehour.appointmentsystem.pojo.schema.officeHourTimeTable.OfficeHourTimetable;
+import io.github.abdofficehour.appointmentsystem.pojo.data.OfficeHourEvent;
+import io.github.abdofficehour.appointmentsystem.pojo.data.TeacherTimeTable;
+import io.github.abdofficehour.appointmentsystem.pojo.schema.timeTable.OfficeHourTimetable;
 import io.github.abdofficehour.appointmentsystem.service.TableInfoService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,9 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * 测试获取教师时间表

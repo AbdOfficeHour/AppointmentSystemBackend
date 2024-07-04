@@ -1,4 +1,4 @@
-package io.github.abdofficehour.appointmentsystem.pojo;
+package io.github.abdofficehour.appointmentsystem.pojo.data;
 
 import lombok.*;
 

@@ -1,8 +1,6 @@
-package io.github.abdofficehour.appointmentsystem.pojo;
+package io.github.abdofficehour.appointmentsystem.pojo.data;
 
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -10,10 +8,12 @@ import java.time.LocalDateTime;
 @Data
 @Getter
 @Setter
-public class ClassroomTimeTable {
+@NoArgsConstructor
+@AllArgsConstructor
+public class TeacherTimeTable {
     private int id;
     private LocalDate appointmentDate;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
-    private int classroom;
+    private String teacherId;
 }

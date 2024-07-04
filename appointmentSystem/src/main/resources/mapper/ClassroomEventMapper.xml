@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="io.github.abdofficehour.appointmentsystem.mapper.ClassroomEventMapper">
-    <resultMap id="UserInfoResult" type="io.github.abdofficehour.appointmentsystem.pojo.ClassroomEvent">
+    <resultMap id="ClassroomEventResult" type="io.github.abdofficehour.appointmentsystem.pojo.data.ClassroomEvent">
         <id column="id" property="id"/>
         <result column="appointmentDate" property="appointmentDate"/>
         <result column="startTime" property="startTime"/>
@@ -37,5 +37,38 @@
          #{state}
         )
     </insert>
+
+    <insert id="insertClassroomEventBatch">
+        insert into classroomevent
+        (appointmentDate, startTime, endTime, applicant, classroom, isMedia, isComputer, isSound, aim, events, approver, state)
+        values
+            <foreach collection="classroomEvents" item="classroomEvent" separator=",">
+                (
+                #{classroomEvent.appointmentDate},
+                #{classroomEvent.startTime},
+                #{classroomEvent.endTime},
+                #{classroomEvent.applicant},
+                #{classroomEvent.classroom},
+                #{classroomEvent.isMedia},
+                #{classroomEvent.isComputer},
+                #{classroomEvent.isSound},
+                #{classroomEvent.aim,typeHandler=io.github.abdofficehour.appointmentsystem.pojo.enumclass.AimTypeHandler,jdbcType=VARCHAR},
+                #{classroomEvent.events},
+                #{classroomEvent.approve},
+                #{classroomEvent.state}
+                )
+            </foreach>
+    </insert>
+
+    <select id="selectByIdAndTime" resultMap="ClassroomEventResult">
+        select * from classroomevent
+        <where>
+            classroom = #{id}
+            and
+            appointmentDate &gt; #{startDate}
+            and
+            appointmentDate &lt;= #{endDate}
+        </where>
+    </select>
 
 </mapper>

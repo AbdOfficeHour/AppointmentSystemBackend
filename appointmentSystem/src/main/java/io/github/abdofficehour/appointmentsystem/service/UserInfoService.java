@@ -1,7 +1,7 @@
 package io.github.abdofficehour.appointmentsystem.service;
 
 import io.github.abdofficehour.appointmentsystem.mapper.UserInfoMapper;
-import io.github.abdofficehour.appointmentsystem.pojo.UserInfo;
+import io.github.abdofficehour.appointmentsystem.pojo.data.UserInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

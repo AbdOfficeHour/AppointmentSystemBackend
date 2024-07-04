@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="io.github.abdofficehour.appointmentsystem.mapper.UserInfoMapper">
-    <resultMap id="UserInfoResult" type="io.github.abdofficehour.appointmentsystem.pojo.UserInfo">
+    <resultMap id="UserInfoResult" type="io.github.abdofficehour.appointmentsystem.pojo.data.UserInfo">
         <id column="id" property="id"/>
         <result column="email" property="email"/>
         <result column="username" property="username"/>
@@ -49,7 +49,7 @@
 
     </select>
 
-    <select id="selectAllClassification" resultType="io.github.abdofficehour.appointmentsystem.pojo.schema.ClassificationSchema">
+    <select id="selectAllClassification" resultType="io.github.abdofficehour.appointmentsystem.pojo.schema.teacherClassification.TeacherClassificationSchema">
         SELECT t.name as classification,userinfo.id as teacherId, userinfo.username as teacherName FROM userinfo
         LEFT JOIN appointment_system.userclassification ON userinfo.id = userclassification.user_id
         LEFT JOIN appointment_system.teacherclassification t on t.id = userclassification.classification

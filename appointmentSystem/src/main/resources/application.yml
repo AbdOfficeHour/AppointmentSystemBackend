@@ -20,3 +20,9 @@ custom:
   config:
     main-app-url: http://localhost:3000
     token-url: /auth/token
+
+    date-len: 14
+    start-hour: 8
+    start-miu: 0
+    end-hour: 17
+    end-miu: 0

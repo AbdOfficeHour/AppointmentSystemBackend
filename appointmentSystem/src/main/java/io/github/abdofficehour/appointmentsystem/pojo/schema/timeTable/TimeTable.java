@@ -1,4 +1,4 @@
-package io.github.abdofficehour.appointmentsystem.pojo.schema.officeHourTimeTable;
+package io.github.abdofficehour.appointmentsystem.pojo.schema.timeTable;
 
 import lombok.Data;
 import lombok.Getter;

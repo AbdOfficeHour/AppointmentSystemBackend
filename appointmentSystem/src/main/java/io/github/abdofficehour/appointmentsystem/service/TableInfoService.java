@@ -1,19 +1,19 @@
 package io.github.abdofficehour.appointmentsystem.service;
 
-import io.github.abdofficehour.appointmentsystem.mapper.OfficeHourEventMapper;
-import io.github.abdofficehour.appointmentsystem.mapper.TeacherTimeTableMapper;
-import io.github.abdofficehour.appointmentsystem.mapper.UserInfoMapper;
-import io.github.abdofficehour.appointmentsystem.pojo.OfficeHourEvent;
-import io.github.abdofficehour.appointmentsystem.pojo.TeacherTimeTable;
-import io.github.abdofficehour.appointmentsystem.pojo.schema.ClassificationSchema;
-import io.github.abdofficehour.appointmentsystem.pojo.schema.TeacherClassificationSchema;
-import io.github.abdofficehour.appointmentsystem.pojo.schema.officeHourTimeTable.OfficeHourTime;
-import io.github.abdofficehour.appointmentsystem.pojo.schema.officeHourTimeTable.OfficeHourTimetable;
-import io.github.abdofficehour.appointmentsystem.pojo.schema.officeHourTimeTable.Period;
-import io.github.abdofficehour.appointmentsystem.pojo.schema.officeHourTimeTable.TimeTable;
+import io.github.abdofficehour.appointmentsystem.config.Properties;
+import io.github.abdofficehour.appointmentsystem.mapper.*;
+import io.github.abdofficehour.appointmentsystem.pojo.data.ClassroomEvent;
+import io.github.abdofficehour.appointmentsystem.pojo.data.OfficeHourEvent;
+import io.github.abdofficehour.appointmentsystem.pojo.data.TeacherTimeTable;
+import io.github.abdofficehour.appointmentsystem.pojo.schema.classroomClassification.ClassroomClassificationSchema;
+import io.github.abdofficehour.appointmentsystem.pojo.schema.classroomClassification.ClassroomsInClassification;
+import io.github.abdofficehour.appointmentsystem.pojo.schema.teacherClassification.TeacherClassificationSchema;
+import io.github.abdofficehour.appointmentsystem.pojo.schema.teacherClassification.TeachersInClassification;
+import io.github.abdofficehour.appointmentsystem.pojo.schema.timeTable.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
@@ -25,38 +25,50 @@ public class TableInfoService {
     private UserInfoMapper userInfoMapper;
 
     @Autowired
+    private ClassroomMapper classroomMapper;
+
+    @Autowired
+    private ClassroomTimeTableMapper classroomTimeTableMapper;
+
+    @Autowired
+    private ClassroomEventMapper classroomEventMapper;
+
+    @Autowired
     private TeacherTimeTableMapper teacherTimeTableMapper;
 
     @Autowired
     private OfficeHourEventMapper officeHourEventMapper;
 
+    @Autowired
+    private Properties properties;
+
     /**
      * 获取officehour选择器
      * @return TeacherClassificationSchema列表 用于记录officeHour教师类型对应教师
      */
-    public List<TeacherClassificationSchema> getOfficeHourPicker(){
+    public List<TeachersInClassification> getOfficeHourPicker(){
         // 读取所有的teacher相关的classification
-        List<ClassificationSchema> classificationSchemas = userInfoMapper.selectAllClassification();
+        List<TeacherClassificationSchema> teacherClassificationSchemas = userInfoMapper.selectAllClassification();
         // 用于存放teacher的信息
-        Map<String,TeacherClassificationSchema> teacherMap = new HashMap<>();
-        for(ClassificationSchema classificationSchema : classificationSchemas){
+        Map<String, TeachersInClassification> teacherMap = new HashMap<>();
+        for(TeacherClassificationSchema teacherClassificationSchema : teacherClassificationSchemas){
 
-            if(!teacherMap.containsKey(classificationSchema.getClassification())){
+            if(!teacherMap.containsKey(teacherClassificationSchema.getClassification())){
                 // 如果teacherMap中没有这个classification，就新建一个TeacherClassificationSchema
-                TeacherClassificationSchema teacherClassificationSchema = new TeacherClassificationSchema();
-                teacherClassificationSchema.setClassification(classificationSchema.getClassification());
+                TeachersInClassification teachersInClassification = new TeachersInClassification();
+                teachersInClassification.setClassification(teacherClassificationSchema.getClassification());
                 // 读取teacher的信息
                 Map<String,Object> teachers = new HashMap<>();
-                teachers.put("teacherId",classificationSchema.getTeacherId());
-                teachers.put("teacherName",classificationSchema.getTeacherName());
+                teachers.put("teacherId", teacherClassificationSchema.getTeacherId());
+                teachers.put("teacherName", teacherClassificationSchema.getTeacherName());
                 // 将teacher信息放入TeacherClassificationSchema
-                teacherClassificationSchema.setTeachers(new ArrayList<>(){{add(teachers);}});
-                teacherMap.put(classificationSchema.getClassification(),teacherClassificationSchema);
+                teachersInClassification.setTeachers(new ArrayList<>(){{add(teachers);}});
+                teacherMap.put(teacherClassificationSchema.getClassification(), teachersInClassification);
             }else{
                 // 如果teacherMap中有这个classification，就直接读取出来,并将teacher信息放入
-                teacherMap.get(classificationSchema.getClassification()).getTeachers().add(new HashMap<>(){{
-                    put("teacherId",classificationSchema.getTeacherId());
-                    put("teacherName",classificationSchema.getTeacherName());
+                teacherMap.get(teacherClassificationSchema.getClassification()).getTeachers().add(new HashMap<>(){{
+                    put("teacherId", teacherClassificationSchema.getTeacherId());
+                    put("teacherName", teacherClassificationSchema.getTeacherName());
                 }});
             }
         }
@@ -65,11 +77,37 @@ public class TableInfoService {
 
     /**
      * 获取classroom选择器
-     * @return 还没做完 //todo 完成教师选择器
+     * @return ClassroomsInClassification列表用于记录教室类型
      */
-    public List<Map<String,String>> getClassroomPicker(){
+    public List<ClassroomsInClassification> getClassroomPicker(){
+        // 读取所有教室种类
+        List<ClassroomClassificationSchema> classificationList = classroomMapper.selectClassification();
+        // 用于存放教室信息
+        Map<String, ClassroomsInClassification> classroomsInClassificationMap = new HashMap<>();
 
-        return null;
+        // 开始遍历
+        for(ClassroomClassificationSchema iterClassroom :classificationList){
+            if(!classroomsInClassificationMap.containsKey(iterClassroom.getClassification())){
+                // 如果没有就创建
+                ClassroomsInClassification classroomsInClassification = new ClassroomsInClassification();
+                classroomsInClassification.setClassification(iterClassroom.getClassification());
+
+                // 读取classroom的信息
+                Map<String,Object> classrooms = new HashMap<>();
+                classrooms.put("classroomId", iterClassroom.getClassroomId());
+                classrooms.put("classroomName", iterClassroom.getClassroomName());
+                // 将classroom信息放入classroomClassificationSchema
+                classroomsInClassification.setClassrooms(new ArrayList<>(){{add(classrooms);}});
+                classroomsInClassificationMap.put(iterClassroom.getClassification(), classroomsInClassification);
+            }else{
+                classroomsInClassificationMap.get(iterClassroom.getClassification()).getClassrooms().add(new HashMap<>(){{
+                    put("classroomId", iterClassroom.getClassroomId());
+                    put("classroomName", iterClassroom.getClassroomName());
+                }});
+            }
+        }
+
+        return classroomsInClassificationMap.values().stream().toList();
     }
 
     /**
@@ -85,19 +123,17 @@ public class TableInfoService {
         /*
          * 从数据库读取所选教师的时间表
          * 然后转化为officeHourTime字段
-         * 读取从今天开始往后14天
-         * todo 可能要修改这个时间逻辑
          */
         // 开始时间
-        LocalDateTime today = LocalDateTime.now();
+        LocalDate today = LocalDate.now();
         // 结束时间
-        LocalDateTime todayAfter14Days = LocalDateTime.now().plusDays(14);
+        LocalDate todayAfterDayLen = LocalDate.now().plusDays(properties.getDateLen());
         // 读取教师的时间表
-        List<TeacherTimeTable> teacherTimeTables = teacherTimeTableMapper.selectTeacherTimeTable(teacherId,today,todayAfter14Days);
+        List<TeacherTimeTable> teacherTimeTables = teacherTimeTableMapper.selectTeacherTimeTable(teacherId,today,todayAfterDayLen);
         // 将TeacherTimeTable转换为OfficeHourTime
-        List<OfficeHourTime> officeHourTimes =
+        List<SpecialTime> specialTimes =
                 teacherTimeTables.stream().map(teacherTimeTable ->
-                    new OfficeHourTime(
+                    new SpecialTime(
                     teacherTimeTable.getAppointmentDate().atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli(),
                     teacherTimeTable.getStartTime().toInstant(ZoneOffset.UTC).toEpochMilli(),
                     teacherTimeTable.getEndTime().toInstant(ZoneOffset.UTC).toEpochMilli())
@@ -108,53 +144,118 @@ public class TableInfoService {
          */
 
         // 读取教师的officehour
-        List<OfficeHourEvent> officeHourEvents = officeHourEventMapper.selectOfficeHourEventByTeacherIdAndFor14Days(teacherId, today, todayAfter14Days);
+        List<OfficeHourEvent> officeHourEvents = officeHourEventMapper.selectOfficeHourEventByTeacherIdAndForDayLen(teacherId, today, todayAfterDayLen);
 
         // 获取的最终timeTable格式
-        List<TimeTable> formatTimetable = formatTimetable(officeHourTimes,officeHourEvents);
+        List<TimeTable> formatTimetable = formatTimetable(
+                today,
+                todayAfterDayLen,
+                officeHourEvents
+                        .stream()
+                        .map(officeHourEvent -> new TableEvent(
+                                officeHourEvent.getAppointmentDate(),
+                                officeHourEvent.getStartTime(),
+                                officeHourEvent.getEndTime()
+                        ))
+                        .toList()
+        );
 
-        return new OfficeHourTimetable(name,officeHourTimes,formatTimetable);
+        return new OfficeHourTimetable(name, specialTimes,formatTimetable);
     }
 
     /**
-     * 用于格式化时间表，将预约记录和officeHour时间进行结合
+     * 获取classroom时间表
+     * @param classroomId 教室id
+     * @return ClassroomTimeTable 表示该教室的从今天开始往后一定时间的占用情况
+     */
+    public ClassroomTimeTable getClassroomTimeTable(int classroomId){
+
+        String name = classroomMapper.selectById(classroomId).getClassroomName();
+
+        /*
+         * 从数据库读取所选教师的时间表
+         * 然后转化为officeHourTime字段
+         */
+        // 开始时间
+        LocalDate today = LocalDate.now();
+        // 结束时间
+        LocalDate todayAfterDayLen = LocalDate.now().plusDays(properties.getDateLen());
+
+        List<io.github.abdofficehour.appointmentsystem.pojo.data.ClassroomTimeTable> classroomTimeTableList = classroomTimeTableMapper.selectTimeTableByTime(classroomId,today,todayAfterDayLen);
+        // 将classroomTimeTable转换为SpecialTime
+        List<SpecialTime> specialTimes =
+                classroomTimeTableList.stream().map(classroomTimeTable ->
+                        new SpecialTime(
+                                classroomTimeTable.getAppointmentDate().atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli(),
+                                classroomTimeTable.getStartTime().toInstant(ZoneOffset.UTC).toEpochMilli(),
+                                classroomTimeTable.getEndTime().toInstant(ZoneOffset.UTC).toEpochMilli())
+                ).toList();
+
+        // 转换timetable格式
+        List<ClassroomEvent> classroomEvents = classroomEventMapper.selectByIdAndTime(classroomId,today,todayAfterDayLen);
+
+        // 转化
+        List<TimeTable> formatTimetable = formatTimetable(
+                today,
+                todayAfterDayLen,
+                classroomEvents
+                        .stream()
+                        .map(classroomEvent -> new TableEvent(
+                                classroomEvent.getAppointmentDate(),
+                                classroomEvent.getStartTime(),
+                                classroomEvent.getEndTime()
+                        ))
+                        .toList()
+        );
+
+
+        return new ClassroomTimeTable(name,specialTimes,formatTimetable);
+    }
+
+    /**
+     * 用于格式化时间表，可以同时作用于officeHour和教室预约，进行格式的修改
      * @return TimeTable对象
      */
-    public List<TimeTable> formatTimetable(List<OfficeHourTime> officeHourTimes, List<OfficeHourEvent> officeHourEvents){
+    public List<TimeTable> formatTimetable(LocalDate startDate,LocalDate endDate, List<TableEvent> tableEvents){
         // 对officeHourEvent进行预处理
         // 使用map记录每一个日期对应的officeHourEvent
-        Map<Long,List<OfficeHourEvent>> dateMapOfficeHourEvents = new HashMap<>();
-        for (OfficeHourEvent officeHourEvent: officeHourEvents){
-            Long eventDate = officeHourEvent.getAppointmentDate().atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli();
+        Map<Long,List<TableEvent>> dateMapTableEvent = new HashMap<>();
+        for (TableEvent tableEvent: tableEvents){
+            Long eventDate = tableEvent.getAppointmentDate().atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli();
 
 
-            if(dateMapOfficeHourEvents.containsKey(eventDate)){
+            if(dateMapTableEvent.containsKey(eventDate)){
                 // 如果这个日期存在的话
-                dateMapOfficeHourEvents.get(eventDate).add(officeHourEvent);
+                dateMapTableEvent.get(eventDate).add(tableEvent);
             }else{
                 // 不存在则创建
                 // 利用静态块进行list的初始化
-                dateMapOfficeHourEvents.put(eventDate,new ArrayList<>() {{add(officeHourEvent);}});
+                dateMapTableEvent.put(eventDate,new ArrayList<>() {{add(tableEvent);}});
             }
         }
 
         // 最后返回的结果
         List<TimeTable> resultTimeTable = new ArrayList<>();
 
-        // 遍历所有的officeHourTimes
-        for (OfficeHourTime officeHourTime : officeHourTimes){
+        // 遍历所有的specialTime
+        for (LocalDate iterDate = startDate; !iterDate.isAfter(endDate); iterDate = iterDate.plusDays(1)){
             TimeTable thisDateTimetable = new TimeTable();
+
+            // 构造一天的开始与结束
+            LocalDateTime startOfToday = iterDate.atTime(properties.getStartHour(),properties.getStartMiu());
+            LocalDateTime endOfToday = iterDate.atTime(properties.getEndHour(),properties.getEndMiu());
+
             // 设置日期
-            thisDateTimetable.setDate(officeHourTime.getDate());
+            thisDateTimetable.setDate(iterDate.atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli());
 
             // 查询对应日期的事件
-            List<OfficeHourEvent> thisOfficeHourEvents = dateMapOfficeHourEvents.get(officeHourTime.getDate());
+            List<TableEvent> thisTableEvent = dateMapTableEvent.get(iterDate.atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli());
 
             // 不存在事件的情况
-            if (Objects.isNull(thisOfficeHourEvents)){
+            if (Objects.isNull(thisTableEvent)){
                 List<Period> busyTime = new ArrayList<>();
                 List<Period> availableTime = new ArrayList<>(){{
-                    add(new Period(officeHourTime.getStart_time(),officeHourTime.getEnd_time()));
+                    add(new Period(startOfToday.toInstant(ZoneOffset.UTC).toEpochMilli(),startOfToday.toInstant(ZoneOffset.UTC).toEpochMilli()));
                 }};
 
                 thisDateTimetable.setBusy(busyTime);
@@ -164,10 +265,10 @@ public class TableInfoService {
             }
 
             // 先排个序
-            thisOfficeHourEvents.sort(Comparator.comparing(OfficeHourEvent::getStartTime));
+            thisTableEvent.sort(Comparator.comparing(TableEvent::getStartTime));
 
             // 获取繁忙时间
-            List<Period> busyTime = thisOfficeHourEvents.stream()
+            List<Period> busyTime = thisTableEvent.stream()
                     .map(officeHourEvent -> new Period(
                             officeHourEvent.getStartTime().toInstant(ZoneOffset.UTC).toEpochMilli(),
                             officeHourEvent.getEndTime().toInstant(ZoneOffset.UTC).toEpochMilli()
@@ -179,7 +280,7 @@ public class TableInfoService {
 
             // 特殊情况，如果有busy time的话，就从officeHourTime开始
             Period firstAvailablePeriod = new Period();
-            firstAvailablePeriod.setStart(officeHourTime.getStart_time());
+            firstAvailablePeriod.setStart(startOfToday.toInstant(ZoneOffset.UTC).toEpochMilli());
             firstAvailablePeriod.setEnd(busyTime.get(0).getStart());
             availableTime.add(firstAvailablePeriod);
 
@@ -194,7 +295,7 @@ public class TableInfoService {
             // 同理结束时间也一样
             Period endAvailablePeriod = new Period();
             endAvailablePeriod.setStart(busyTime.get(busyTime.size()-1).getEnd());
-            endAvailablePeriod.setEnd(officeHourTime.getEnd_time());
+            endAvailablePeriod.setEnd(endOfToday.toInstant(ZoneOffset.UTC).toEpochMilli());
             availableTime.add(endAvailablePeriod);
 
             thisDateTimetable.setBusy(busyTime);

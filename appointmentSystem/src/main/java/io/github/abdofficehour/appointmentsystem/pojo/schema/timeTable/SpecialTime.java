@@ -1,4 +1,4 @@
-package io.github.abdofficehour.appointmentsystem.pojo.schema.officeHourTimeTable;
+package io.github.abdofficehour.appointmentsystem.pojo.schema.timeTable;
 
 import lombok.*;
 
@@ -11,7 +11,7 @@ import lombok.*;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class OfficeHourTime {
+public class SpecialTime {
     private Long date;
     private Long start_time;
     private Long end_time;

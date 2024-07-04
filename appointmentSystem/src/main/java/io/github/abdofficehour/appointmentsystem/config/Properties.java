@@ -15,4 +15,11 @@ import org.springframework.stereotype.Component;
 public class Properties {
     private String mainAppUrl;
     private String tokenUrl;
+
+    // 一天的时间的相关设置
+    private int dateLen;
+    private int startHour;
+    private int startMiu;
+    private int endHour;
+    private int endMiu;
 }

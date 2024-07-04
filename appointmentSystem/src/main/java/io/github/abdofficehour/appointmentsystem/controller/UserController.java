@@ -1,7 +1,7 @@
 package io.github.abdofficehour.appointmentsystem.controller;
 
-import io.github.abdofficehour.appointmentsystem.pojo.UserInfo;
-import io.github.abdofficehour.appointmentsystem.pojo.schema.ResponseMap;
+import io.github.abdofficehour.appointmentsystem.pojo.data.UserInfo;
+import io.github.abdofficehour.appointmentsystem.pojo.ResponseMap;
 import io.github.abdofficehour.appointmentsystem.service.UserInfoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

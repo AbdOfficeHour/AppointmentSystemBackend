@@ -26,6 +26,22 @@ create table classroomtimetable
 )
     comment 'Classroom Time Table';
 
+create table classroomclassification
+(
+    id int auto_increment comment 'Primary Key' primary key ,
+    name varchar(255)
+)
+comment 'the classification of classroom';
+
+create table classroomToClassification
+(
+    classroom int,
+    classification int,
+    foreign key (classroom) references classroom(id),
+    foreign key (classification) references classroomclassification(id)
+)
+comment 'classification to classroom';
+
 create table credit
 (
     id          int auto_increment comment 'Primary Key'
@@ -103,9 +119,7 @@ create table classroomevent
     constraint classroomevent_ibfk_1
         foreign key (classroom) references classroom (id),
     constraint classroomevent_ibfk_2
-        foreign key (applicant) references userinfo (id),
-    constraint classroomevent_ibfk_3
-        foreign key (approver) references userinfo (id)
+        foreign key (applicant) references userinfo (id)
 )
     comment 'Classroom Event';
 

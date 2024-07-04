@@ -1,8 +1,9 @@
 package io.github.abdofficehour.appointmentsystem.mapper;
 
-import io.github.abdofficehour.appointmentsystem.pojo.OfficeHourEvent;
+import io.github.abdofficehour.appointmentsystem.pojo.data.OfficeHourEvent;
 import org.apache.ibatis.annotations.Mapper;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -12,5 +13,5 @@ public interface OfficeHourEventMapper {
 
     void insertBatch(List<OfficeHourEvent> officeHourEvents);
 
-    List<OfficeHourEvent> selectOfficeHourEventByTeacherIdAndFor14Days(String teacherId, LocalDateTime startTime, LocalDateTime endTime);
+    List<OfficeHourEvent> selectOfficeHourEventByTeacherIdAndForDayLen(String teacherId, LocalDate startTime, LocalDate endTime);
 }

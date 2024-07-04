@@ -1,20 +1,15 @@
 package io.github.abdofficehour.appointmentsystem.filter;
 
-import io.github.abdofficehour.appointmentsystem.pojo.UserInfo;
+import io.github.abdofficehour.appointmentsystem.pojo.data.UserInfo;
 import io.github.abdofficehour.appointmentsystem.service.RestRequestService;
 import io.github.abdofficehour.appointmentsystem.service.UserInfoService;
 import jakarta.servlet.*;
-import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
 
 public class AuthFilter implements Filter {
 

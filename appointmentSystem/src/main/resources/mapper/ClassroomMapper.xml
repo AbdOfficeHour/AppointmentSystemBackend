@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="io.github.abdofficehour.appointmentsystem.mapper.ClassroomMapper">
+
+    <resultMap id="classroomResult" type="io.github.abdofficehour.appointmentsystem.pojo.data.Classroom">
+        <id column="id" property="id"/>
+        <result column="classroom_name" property="classroomName"/>
+    </resultMap>
+
+    <select id="selectClassification" resultType="io.github.abdofficehour.appointmentsystem.pojo.schema.classroomClassification.ClassroomClassificationSchema">
+        select classroomclassification.name as classification, classroom.id as classroomId, classroom.classroom_name as classroomName from classroom
+        left join classroomtoclassification on classroom.id = classroomtoclassification.classroom
+        left join classroomclassification on classroomtoclassification.classification = classroomclassification.id
+    </select>
+
+    <select id="selectById" resultMap="classroomResult">
+        select * from classroom
+        where id = #{id}
+    </select>
+
+</mapper>

@@ -1,8 +1,11 @@
 package io.github.abdofficehour.appointmentsystem.TableInfoServiceTest;
 
-import io.github.abdofficehour.appointmentsystem.pojo.OfficeHourEvent;
-import io.github.abdofficehour.appointmentsystem.pojo.schema.officeHourTimeTable.OfficeHourTime;
-import io.github.abdofficehour.appointmentsystem.pojo.schema.officeHourTimeTable.TimeTable;
+import com.mysql.cj.xdevapi.Table;
+import io.github.abdofficehour.appointmentsystem.config.Properties;
+import io.github.abdofficehour.appointmentsystem.pojo.data.OfficeHourEvent;
+import io.github.abdofficehour.appointmentsystem.pojo.schema.timeTable.SpecialTime;
+import io.github.abdofficehour.appointmentsystem.pojo.schema.timeTable.TableEvent;
+import io.github.abdofficehour.appointmentsystem.pojo.schema.timeTable.TimeTable;
 import io.github.abdofficehour.appointmentsystem.service.TableInfoService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,49 +26,33 @@ public class FormatDateTest {
     @Autowired
     TableInfoService tableInfoService;
 
+    @Autowired
+    Properties properties;
+
     @Test
     void testFormatDate(){
-
-        List<OfficeHourTime> officeHourTimes = new ArrayList<>(){{
-           add(new OfficeHourTime(
-                   LocalDate.of(2024,3,10).atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli(),
-                   LocalDateTime.of(2024,3,10,14,0).toInstant(ZoneOffset.UTC).toEpochMilli(),
-                   LocalDateTime.of(2024,3,10,17,0).toInstant(ZoneOffset.UTC).toEpochMilli()
+        List<TableEvent> tableEvents = new ArrayList<>(){{
+           add(new TableEvent(
+                LocalDate.of(2024,7,4),
+                LocalDateTime.of(2024,7,4,14,30),
+                LocalDateTime.of(2024,7,4,15,10)
            ));
-            add(new OfficeHourTime(
-                    LocalDate.of(2024,3,11).atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli(),
-                    LocalDateTime.of(2024,3,10,14,0).toInstant(ZoneOffset.UTC).toEpochMilli(),
-                    LocalDateTime.of(2024,3,10,17,30).toInstant(ZoneOffset.UTC).toEpochMilli()
-                    ));
-            add(new OfficeHourTime(
-                    LocalDate.of(2024,3,12).atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli(),
-                    LocalDateTime.of(2024,3,10,14,0).toInstant(ZoneOffset.UTC).toEpochMilli(),
-                    LocalDateTime.of(2024,3,10,17,0).toInstant(ZoneOffset.UTC).toEpochMilli()
-                    ));
-        }};
-
-
-        List<OfficeHourEvent> officeHourEvents = new ArrayList<>(){{
-           add(new OfficeHourEvent(
-                LocalDate.of(2024,3,10),
-                LocalDateTime.of(2024,3,10,14,30),
-                LocalDateTime.of(2024,3,10,15,10)
-           ));
-            add(new OfficeHourEvent(
-                    LocalDate.of(2024,3,10),
-                    LocalDateTime.of(2024,3,10,15,40),
-                    LocalDateTime.of(2024,3,10,16,10)
+            add(new TableEvent(
+                    LocalDate.of(2024,7,4),
+                    LocalDateTime.of(2024,7,4,15,40),
+                    LocalDateTime.of(2024,7,4,16,10)
             ));
-            add(new OfficeHourEvent(
-                    LocalDate.of(2024,3,11),
-                    LocalDateTime.of(2024,3,10,14,30),
-                    LocalDateTime.of(2024,3,10,15,10)
+            add(new TableEvent(
+                    LocalDate.of(2024,7,6),
+                    LocalDateTime.of(2024,7,6,14,30),
+                    LocalDateTime.of(2024,7,6,15,10)
             ));
         }};
 
+        LocalDate today = LocalDate.now();
+        LocalDate endDay = today.plusDays(properties.getDateLen());
 
-
-        List<TimeTable> timeTables = tableInfoService.formatTimetable(officeHourTimes,officeHourEvents);
+        List<TimeTable> timeTables = tableInfoService.formatTimetable(today,endDay,tableEvents);
 
         for (TimeTable timeTable:timeTables){
             System.out.println(timeTable);

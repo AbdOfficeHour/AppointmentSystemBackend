@@ -1,4 +1,4 @@
-package io.github.abdofficehour.appointmentsystem.pojo.schema.officeHourTimeTable;
+package io.github.abdofficehour.appointmentsystem.pojo.schema.timeTable;
 
 import lombok.*;
 
@@ -15,6 +15,6 @@ import java.util.List;
 @NoArgsConstructor
 public class OfficeHourTimetable {
     private String name;
-    private List<OfficeHourTime> officeHourTime;
+    private List<SpecialTime> officeHourTime;
     private List<TimeTable> timeTable;
 }
