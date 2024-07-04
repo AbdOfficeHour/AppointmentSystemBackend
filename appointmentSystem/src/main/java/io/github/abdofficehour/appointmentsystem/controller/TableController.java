@@ -1,7 +1,10 @@
 package io.github.abdofficehour.appointmentsystem.controller;
 
 import io.github.abdofficehour.appointmentsystem.pojo.ResponseMap;
+import io.github.abdofficehour.appointmentsystem.pojo.schema.classroomClassification.ClassroomClassificationSchema;
+import io.github.abdofficehour.appointmentsystem.pojo.schema.classroomClassification.ClassroomsInClassification;
 import io.github.abdofficehour.appointmentsystem.pojo.schema.teacherClassification.TeachersInClassification;
+import io.github.abdofficehour.appointmentsystem.pojo.schema.timeTable.ClassroomTimeTable;
 import io.github.abdofficehour.appointmentsystem.pojo.schema.timeTable.OfficeHourTimetable;
 import io.github.abdofficehour.appointmentsystem.service.TableInfoService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -47,19 +50,28 @@ public class TableController {
         return new ResponseMap(0,"获取成功",officeHourTimetable);
     }
 
-    //todo 完成教室选择器
     @Operation(summary = "获取教室预约选择器")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200"),
+            @ApiResponse(responseCode = "401")
+    })
     @GetMapping("/picker/classroom")
     public ResponseMap getClassroomPicker(){
 
-        return null;
+        List<ClassroomsInClassification> classificationResult =  tableInfoService.getClassroomPicker();
+
+        return new ResponseMap(0,"获取成功",classificationResult);
     }
 
-    // todo 完成教室时间表
     @Operation(summary = "获取教室时间表")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200"),
+            @ApiResponse(responseCode = "401")
+    })
     @GetMapping("/classroom/{classroom}")
-    public ResponseMap getClassroomTimeTable(@PathVariable String classroom){
+    public ResponseMap getClassroomTimeTable(@PathVariable int classroom){
+        ClassroomTimeTable classroomTimeTable = tableInfoService.getClassroomTimeTable(classroom);
 
-        return null;
+        return new ResponseMap(0,"获取成功",classroomTimeTable);
     }
 }

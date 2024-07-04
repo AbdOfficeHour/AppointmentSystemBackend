@@ -1,6 +1,5 @@
 package io.github.abdofficehour.appointmentsystem.mapper;
 
-import io.github.abdofficehour.appointmentsystem.pojo.data.Classroom;
 import io.github.abdofficehour.appointmentsystem.pojo.data.ClassroomEvent;
 import org.apache.ibatis.annotations.Mapper;
 

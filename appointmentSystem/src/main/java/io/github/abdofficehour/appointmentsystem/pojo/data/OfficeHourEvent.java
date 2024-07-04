@@ -22,12 +22,15 @@ public class OfficeHourEvent {
     private String workSummary;
     private int state;
 
-    public OfficeHourEvent(LocalDate appointmentDate, LocalDateTime startTime, LocalDateTime endTime){
-        this.appointmentDate = appointmentDate;
-        this.startTime = startTime;
-        this.endTime = endTime;
-    }
 
+    /**
+     * 测试用构造函数
+     * @param appointmentDate 日期
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @param student 学生
+     * @param teacher 教室
+     */
     public OfficeHourEvent(LocalDate appointmentDate, LocalDateTime startTime, LocalDateTime endTime,String student,String teacher){
         this.appointmentDate = appointmentDate;
         this.startTime = startTime;

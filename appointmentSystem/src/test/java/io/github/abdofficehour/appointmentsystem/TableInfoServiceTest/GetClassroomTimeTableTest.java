@@ -1,7 +1,6 @@
 package io.github.abdofficehour.appointmentsystem.TableInfoServiceTest;
 
 import io.github.abdofficehour.appointmentsystem.mapper.ClassroomEventMapper;
-import io.github.abdofficehour.appointmentsystem.mapper.ClassroomMapper;
 import io.github.abdofficehour.appointmentsystem.pojo.data.ClassroomEvent;
 import io.github.abdofficehour.appointmentsystem.pojo.enumclass.Aim;
 import io.github.abdofficehour.appointmentsystem.service.TableInfoService;

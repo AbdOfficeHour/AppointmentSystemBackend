@@ -1,9 +1,6 @@
 package io.github.abdofficehour.appointmentsystem.TableInfoServiceTest;
 
-import com.mysql.cj.xdevapi.Table;
 import io.github.abdofficehour.appointmentsystem.config.Properties;
-import io.github.abdofficehour.appointmentsystem.pojo.data.OfficeHourEvent;
-import io.github.abdofficehour.appointmentsystem.pojo.schema.timeTable.SpecialTime;
 import io.github.abdofficehour.appointmentsystem.pojo.schema.timeTable.TableEvent;
 import io.github.abdofficehour.appointmentsystem.pojo.schema.timeTable.TimeTable;
 import io.github.abdofficehour.appointmentsystem.service.TableInfoService;
@@ -13,7 +10,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 
