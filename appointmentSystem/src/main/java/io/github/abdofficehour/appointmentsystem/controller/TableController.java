@@ -1,7 +1,6 @@
 package io.github.abdofficehour.appointmentsystem.controller;
 
 import io.github.abdofficehour.appointmentsystem.pojo.ResponseMap;
-import io.github.abdofficehour.appointmentsystem.pojo.schema.classroomClassification.ClassroomClassificationSchema;
 import io.github.abdofficehour.appointmentsystem.pojo.schema.classroomClassification.ClassroomsInClassification;
 import io.github.abdofficehour.appointmentsystem.pojo.schema.teacherClassification.TeachersInClassification;
 import io.github.abdofficehour.appointmentsystem.pojo.schema.timeTable.ClassroomTimeTable;
