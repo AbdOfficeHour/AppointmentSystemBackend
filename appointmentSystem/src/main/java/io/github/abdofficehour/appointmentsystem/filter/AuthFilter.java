@@ -9,6 +9,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Objects;
 
 public class AuthFilter implements Filter {
@@ -40,9 +42,11 @@ public class AuthFilter implements Filter {
         // 根据用户id查询信息
         if(!"".equals(id)){
             UserInfo userInfo = userInfoService.searchUserById(id);
+            HashMap<String, List<String>> userAuth = userInfoService.SearchAuthorityByUser(id);
             if (!Objects.isNull(userInfo)){
                 ifSuccess = true;
                 httpRequest.setAttribute("userinfo",userInfo);
+                httpRequest.setAttribute("userAuth",userAuth);
             }
         }
 

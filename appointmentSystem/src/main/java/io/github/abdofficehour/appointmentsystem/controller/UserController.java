@@ -1,5 +1,6 @@
 package io.github.abdofficehour.appointmentsystem.controller;
 
+import io.github.abdofficehour.appointmentsystem.annotation.Authority;
 import io.github.abdofficehour.appointmentsystem.pojo.data.UserInfo;
 import io.github.abdofficehour.appointmentsystem.pojo.ResponseMap;
 import io.github.abdofficehour.appointmentsystem.service.UserInfoService;
@@ -35,11 +36,12 @@ public class UserController {
     public ResponseMap getUserInfo(HttpServletRequest request){
 
         UserInfo userInfo = (UserInfo) request.getAttribute("userinfo");
+        HashMap<String, List<String>> userAuth = (HashMap<String, List<String>>) request.getAttribute("userAuth");
         Map<String,Object> map = new HashMap<>();
         map.put("username",userInfo.getUsername());
         map.put("email",userInfo.getEmail());
         map.put("phone",userInfo.getPhone());
-        map.put("userAuthority",userInfoService.SearchAuthorityByUser(userInfo.getId()));
+        map.put("userAuthority",userAuth);
 
 
         return new ResponseMap(0,"成功",map);
