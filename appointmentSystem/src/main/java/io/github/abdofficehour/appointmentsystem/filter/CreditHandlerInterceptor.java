@@ -1,6 +1,7 @@
 package io.github.abdofficehour.appointmentsystem.filter;
 
 import io.github.abdofficehour.appointmentsystem.annotation.Authority;
+import jakarta.annotation.Nullable;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Component;
@@ -14,8 +15,9 @@ import java.util.List;
 @Component
 public class CreditHandlerInterceptor implements HandlerInterceptor {
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+    public boolean preHandle(HttpServletRequest request, @Nullable HttpServletResponse response, @Nullable Object handler) throws Exception {
 
+        @SuppressWarnings("unchecked")
         HashMap<String, List<String>> userAuth = (HashMap<String, List<String>>) request.getAttribute("userAuth");
 
         if(handler instanceof HandlerMethod handlerMethod){
@@ -26,7 +28,7 @@ public class CreditHandlerInterceptor implements HandlerInterceptor {
                 String value = authority.value();
                 // 检查是否具有该权限
                 for(String auth: userAuth.get("credit")){
-                    if(value == auth){
+                    if(value.equals(auth)){
                         return true;
                     }
                 }
