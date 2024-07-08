@@ -79,10 +79,6 @@ public class TableInfoService {
         return teacherMap.values().stream().toList();
     }
 
-    public void filterTeachers(){
-
-    }
-
     /**
      * 获取classroom选择器
      * @return ClassroomsInClassification列表用于记录教室类型
