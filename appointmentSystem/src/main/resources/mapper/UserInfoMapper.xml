@@ -50,11 +50,17 @@
     </select>
 
     <select id="selectAllClassification" resultType="io.github.abdofficehour.appointmentsystem.pojo.schema.teacherClassification.TeacherClassificationSchema">
-        SELECT t.name as classification,userinfo.id as teacherId, userinfo.username as teacherName FROM userinfo
+        SELECT distinct t.name as classification,userinfo.id as teacherId, userinfo.username as teacherName FROM userinfo
         LEFT JOIN appointment_system.userclassification ON userinfo.id = userclassification.user_id
         LEFT JOIN appointment_system.teacherclassification t on t.id = userclassification.classification
         LEFT JOIN appointment_system.userrole u on userinfo.id = u.user_id
-        WHERE
+        RIGHT JOIN appointment_system.teachertimetable tt on tt.teacherid = userinfo.id
+        <where>
             u.role_id = 1
+            and
+            tt.appointmentDate &lt;#{endDate}
+            and
+            tt.appointmentDate &gt;=#{startDate}
+        </where>
     </select>
 </mapper>

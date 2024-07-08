@@ -13,6 +13,7 @@ import io.github.abdofficehour.appointmentsystem.pojo.schema.timeTable.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -47,8 +48,11 @@ public class TableInfoService {
      * @return TeacherClassificationSchema列表 用于记录officeHour教师类型对应教师
      */
     public List<TeachersInClassification> getOfficeHourPicker(){
+        LocalDate today = LocalDate.now();
+        LocalDate dayAfterLen = today.plusDays(properties.getDateLen());
+
         // 读取所有的teacher相关的classification
-        List<TeacherClassificationSchema> teacherClassificationSchemas = userInfoMapper.selectAllClassification();
+        List<TeacherClassificationSchema> teacherClassificationSchemas = userInfoMapper.selectAllClassification(today,dayAfterLen);
         // 用于存放teacher的信息
         Map<String, TeachersInClassification> teacherMap = new HashMap<>();
         for(TeacherClassificationSchema teacherClassificationSchema : teacherClassificationSchemas){
@@ -73,6 +77,10 @@ public class TableInfoService {
             }
         }
         return teacherMap.values().stream().toList();
+    }
+
+    public void filterTeachers(){
+
     }
 
     /**
@@ -145,6 +153,20 @@ public class TableInfoService {
 
         // 读取教师的officehour
         List<OfficeHourEvent> officeHourEvents = officeHourEventMapper.selectOfficeHourEventByTeacherIdAndForDayLen(teacherId, today, todayAfterDayLen);
+
+        /*
+        检查一下该教师是否还可预约
+        如果是今天或者之后没有officeHour就不能预约
+        否则就到最后一天officeHour为止
+         */
+
+        if(!specialTimes.isEmpty()){
+            Instant instant = Instant.ofEpochMilli(specialTimes.get(specialTimes.size()-1).getDate()).atZone(ZoneOffset.UTC).toInstant();
+            todayAfterDayLen = LocalDate.ofInstant(instant,ZoneOffset.UTC);
+        }else{
+            // 不应该有时间表的情况
+            return new OfficeHourTimetable(name,specialTimes,null);
+        }
 
         // 获取的最终timeTable格式
         List<TimeTable> formatTimetable = formatTimetable(

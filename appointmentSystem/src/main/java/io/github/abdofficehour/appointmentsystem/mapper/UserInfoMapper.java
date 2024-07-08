@@ -4,6 +4,7 @@ import io.github.abdofficehour.appointmentsystem.pojo.data.UserInfo;
 import io.github.abdofficehour.appointmentsystem.pojo.schema.teacherClassification.TeacherClassificationSchema;
 import org.apache.ibatis.annotations.Mapper;
 
+import java.time.LocalDate;
 import java.util.*;
 
 @Mapper
@@ -18,5 +19,5 @@ public interface UserInfoMapper {
 
     List<UserInfo> selectAllByIdList(String searchData);
 
-    List<TeacherClassificationSchema> selectAllClassification();
+    List<TeacherClassificationSchema> selectAllClassification(LocalDate startDate, LocalDate endDate);
 }
