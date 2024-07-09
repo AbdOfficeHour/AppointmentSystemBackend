@@ -22,6 +22,12 @@ const users = JSON.parse(fs.readFileSync('./account.json'));
 
 app.post('/register', (req, res) => {
     const {id,tel,pass} = req.body;
+
+    if (!id || !tel || !pass){
+        res.status(500)
+        return;
+    }
+
     const user = new User({id,tel,pass});
 
     for (const u of users) {
@@ -32,6 +38,8 @@ app.post('/register', (req, res) => {
     }
 
     users.push(user);
+    console.log(user)
+    console.log(users)
 
     fs.writeFileSync('./account.json', JSON.stringify(users));
     res.status(200).send('User created');
@@ -40,6 +48,11 @@ app.post('/register', (req, res) => {
 
 app.post('/login', (req, res) => {
     const {id, pass} = req.body;
+
+    if (!id || !pass){
+        res.status(500)
+        return;
+    }
 
     for (const u of users) {
         if (u.id === id && u.pass === pass) {

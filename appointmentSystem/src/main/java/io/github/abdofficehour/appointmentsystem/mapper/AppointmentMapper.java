@@ -1,5 +1,6 @@
 package io.github.abdofficehour.appointmentsystem.mapper;
 
+import io.github.abdofficehour.appointmentsystem.pojo.data.ClassroomEvent;
 import io.github.abdofficehour.appointmentsystem.pojo.data.OfficeHourEvent;
 import io.github.abdofficehour.appointmentsystem.pojo.data.TeacherClassification;
 import org.apache.ibatis.annotations.Mapper;
@@ -33,4 +34,20 @@ public interface AppointmentMapper {
 
     void insertAppointment(@Param("appointment") OfficeHourEvent appointment);
 
+    //下面是ClassRoom的相关mapper接口设计
+    List<ClassroomEvent>findClassroomEventsByIdAndTime(@Param("id") String id, @Param("time") int time);
+
+    List<String> searchClassroomById(int id);//这个是用于get时找同伙用的
+
+    ClassroomEvent findClassroomEventById(@Param("id") int id);
+
+    void updateClassroomEvent(ClassroomEvent event);
+
+    List<String> findAllClassroomIds();
+
+    List<Map<String, String>> findClassroomsByIds(@Param("ids") List<String> ids);
+
+    List<Map<String, Object>> findAppointmentsByClassroomId(@Param("classroomId") String classroomId);
+
+    void insertClassroomEvent(@Param("classroomEvent") ClassroomEvent classroomEvent);
 }
