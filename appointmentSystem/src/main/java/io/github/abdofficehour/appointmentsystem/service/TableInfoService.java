@@ -4,18 +4,20 @@ import io.github.abdofficehour.appointmentsystem.config.Properties;
 import io.github.abdofficehour.appointmentsystem.mapper.*;
 import io.github.abdofficehour.appointmentsystem.pojo.data.ClassroomEvent;
 import io.github.abdofficehour.appointmentsystem.pojo.data.OfficeHourEvent;
+import io.github.abdofficehour.appointmentsystem.pojo.data.TeacherBanTime;
 import io.github.abdofficehour.appointmentsystem.pojo.data.TeacherTimeTable;
 import io.github.abdofficehour.appointmentsystem.pojo.schema.classroomClassification.ClassroomClassificationSchema;
 import io.github.abdofficehour.appointmentsystem.pojo.schema.classroomClassification.ClassroomsInClassification;
 import io.github.abdofficehour.appointmentsystem.pojo.schema.teacherClassification.TeacherClassificationSchema;
 import io.github.abdofficehour.appointmentsystem.pojo.schema.teacherClassification.TeachersInClassification;
 import io.github.abdofficehour.appointmentsystem.pojo.schema.timeTable.*;
+import io.github.abdofficehour.appointmentsystem.pojo.schema.timeTable.Period;
+import org.apache.ibatis.type.NStringTypeHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.*;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Service
@@ -305,5 +307,34 @@ public class TableInfoService {
         }
 
         return resultTimeTable;
+    }
+
+    /**
+     * 用于教师禁用时间段------------from：ymz方便修改
+     */
+    public void banTeacher(String teacherId, TeacherBanTime banRequest){
+        // 获取教师的名字
+        String name = userInfoMapper.selectById(teacherId).getUsername();
+
+        OfficeHourEvent banTime = new OfficeHourEvent();
+        banTime.setTeacher(name);
+        banTime.setState(0);
+        LocalDateTime startDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(banRequest.getStartDate()), ZoneId.systemDefault());
+        LocalDateTime endDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(banRequest.getEndDate()), ZoneId.systemDefault());
+        LocalDateTime startTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(banRequest.getStartTime()), ZoneId.systemDefault());
+        LocalDateTime endTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(banRequest.getEndTime()), ZoneId.systemDefault());
+        LocalDateTime modifiedStart = startTime.withYear(startDate.getYear())
+                .withMonth(startDate.getMonthValue())
+                .withDayOfMonth(startDate.getDayOfMonth());
+        LocalDateTime modifiedEnd = endTime.withYear(endDate.getYear())
+                .withMonth(endDate.getMonthValue())
+                .withDayOfMonth(endDate.getDayOfMonth());
+        banTime.setStartTime(modifiedStart);
+        banTime.setEndTime(modifiedEnd);
+        long daysBetween = ChronoUnit.DAYS.between(startDate, endDate);
+        for (int i = 0; i <= daysBetween; i++) {
+            //利用for循环添加禁用天数
+            officeHourEventMapper.insertOfficeHourEvent(banTime);
+        }
     }
 }

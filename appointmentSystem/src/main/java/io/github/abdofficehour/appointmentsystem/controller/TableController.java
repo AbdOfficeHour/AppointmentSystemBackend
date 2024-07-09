@@ -1,6 +1,8 @@
 package io.github.abdofficehour.appointmentsystem.controller;
 
+import io.github.abdofficehour.appointmentsystem.annotation.Authority;
 import io.github.abdofficehour.appointmentsystem.pojo.ResponseMap;
+import io.github.abdofficehour.appointmentsystem.pojo.data.TeacherBanTime;
 import io.github.abdofficehour.appointmentsystem.pojo.schema.classroomClassification.ClassroomsInClassification;
 import io.github.abdofficehour.appointmentsystem.pojo.schema.teacherClassification.TeachersInClassification;
 import io.github.abdofficehour.appointmentsystem.pojo.schema.timeTable.ClassroomTimeTable;
@@ -10,10 +12,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -72,5 +71,18 @@ public class TableController {
         ClassroomTimeTable classroomTimeTable = tableInfoService.getClassroomTimeTable(classroom);
 
         return new ResponseMap(0,"获取成功",classroomTimeTable);
+    }
+
+    //from ymz (随时返工QAQ）
+    @Operation(summary = "教师禁用时间段")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200"),
+            @ApiResponse(responseCode = "401")
+    })
+    @PostMapping("/ban/{teacherId}")
+    public ResponseMap banTimePeriod(@PathVariable("teacherId") String teacherId, @RequestBody TeacherBanTime banTimeRequest){
+        tableInfoService.banTeacher(teacherId, banTimeRequest);
+
+        return new ResponseMap(0,"获取成功",null);
     }
 }
