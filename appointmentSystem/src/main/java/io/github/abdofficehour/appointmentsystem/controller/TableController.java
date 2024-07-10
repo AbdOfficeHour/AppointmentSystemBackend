@@ -1,6 +1,5 @@
 package io.github.abdofficehour.appointmentsystem.controller;
 
-import io.github.abdofficehour.appointmentsystem.annotation.Authority;
 import io.github.abdofficehour.appointmentsystem.pojo.ResponseMap;
 import io.github.abdofficehour.appointmentsystem.pojo.data.TeacherBanTime;
 import io.github.abdofficehour.appointmentsystem.pojo.schema.classroomClassification.ClassroomsInClassification;
@@ -14,7 +13,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 @RestController
@@ -32,8 +33,12 @@ public class TableController {
     @GetMapping("/picker/officehour")
     public ResponseMap getOfficeHourPicker(){
         List<TeachersInClassification> classificationSchemaList = tableInfoService.getOfficeHourPicker();
+        Map<String,Object> response = new HashMap<>(){{
+            put("pickerList",classificationSchemaList);
+        }};
 
-        return new ResponseMap(0,"获取成功",classificationSchemaList);
+
+        return new ResponseMap(0,"获取成功",response);
     }
 
     @Operation(summary = "检索教师时间表")
@@ -55,10 +60,13 @@ public class TableController {
     })
     @GetMapping("/picker/classroom")
     public ResponseMap getClassroomPicker(){
+        // todo 增加一下权限的判断
 
         List<ClassroomsInClassification> classificationResult =  tableInfoService.getClassroomPicker();
-
-        return new ResponseMap(0,"获取成功",classificationResult);
+        Map<String,Object> response = new HashMap<>(){{
+            put("pickerList",classificationResult);
+        }};
+        return new ResponseMap(0,"获取成功",response);
     }
 
     @Operation(summary = "获取教室时间表")

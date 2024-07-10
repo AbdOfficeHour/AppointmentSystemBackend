@@ -29,17 +29,17 @@ public class GetOfficeHourPickerTest {
     void testGetOfficeHourPicker(){
         teacherTimeTableMapper.insertBatch(new ArrayList<>(){{
             add(new TeacherTimeTable(
-                    LocalDate.of(2024,7,9),
-                    LocalDateTime.of(2024,7,9,14,0),
-                    LocalDateTime.of(2024,7,9,14,30),
+                    LocalDate.of(2024,7,8),
+                    LocalDateTime.of(2024,7,8,14,0),
+                    LocalDateTime.of(2024,7,8,14,30),
                     "scun001"
             ));
         }});
         teacherTimeTableMapper.insertBatch(new ArrayList<>(){{
             add(new TeacherTimeTable(
-                    LocalDate.of(2024,7,10),
-                    LocalDateTime.of(2024,7,10,14,0),
-                    LocalDateTime.of(2024,7,10,14,30),
+                    LocalDate.of(2024,7,9),
+                    LocalDateTime.of(2024,7,9,14,0),
+                    LocalDateTime.of(2024,7,9,14,30),
                     "scun001"
             ));
         }});

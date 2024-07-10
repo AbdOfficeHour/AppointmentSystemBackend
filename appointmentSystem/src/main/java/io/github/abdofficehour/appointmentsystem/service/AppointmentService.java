@@ -247,19 +247,19 @@ public class AppointmentService {
             LocalDateTime endTime = Instant.ofEpochSecond(endTimeTimestamp).atZone(ZoneOffset.UTC).toLocalDateTime();
 
             ClassroomEvent classroomEvent = new ClassroomEvent();
-            classroomEvent.setClassroom(classroom);
+//            classroomEvent.setClassroom(classroom);
             classroomEvent.setAppointmentDate(appointmentDate);
             classroomEvent.setStartTime(startTime);
             classroomEvent.setEndTime(endTime);
             classroomEvent.setIsMedia(isMedia);
             classroomEvent.setIsComputer(isComputer);
             classroomEvent.setIsSound(isSound);
-            classroomEvent.setPresent(present);
-            classroomEvent.setAim(aim);
+//            classroomEvent.setPresent(present);
+//            classroomEvent.setAim(aim);
             classroomEvent.setEvents(events);
             classroomEvent.setState(state);
 
-            AppointmentMapper.insertClassroomEvent(classroomEvent);
+//            AppointmentMapper.insertClassroomEvent(classroomEvent);
 
             return true;
         } catch (Exception e) {
