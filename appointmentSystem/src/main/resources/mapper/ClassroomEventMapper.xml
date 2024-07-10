@@ -65,7 +65,7 @@
         <where>
             classroom = #{id}
             and
-            appointmentDate &gt; #{startDate}
+            appointmentDate &gt;= #{startDate}
             and
             appointmentDate &lt;= #{endDate}
         </where>

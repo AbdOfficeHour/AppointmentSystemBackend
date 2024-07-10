@@ -3,6 +3,9 @@ package io.github.abdofficehour.appointmentsystem.mapper;
 import io.github.abdofficehour.appointmentsystem.pojo.data.ClassroomEvent;
 import io.github.abdofficehour.appointmentsystem.pojo.data.OfficeHourEvent;
 import io.github.abdofficehour.appointmentsystem.pojo.data.TeacherClassification;
+import io.github.abdofficehour.appointmentsystem.pojo.schema.classroomData.ClassroomEventDisplay;
+import io.github.abdofficehour.appointmentsystem.pojo.schema.officehourData.OfficeHourEventDisplay;
+import org.apache.ibatis.annotations.MapKey;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -19,7 +22,9 @@ public interface AppointmentMapper {
      * @param time 筛选的时间段，单位：月
      * @return 符合条件的预约记录列表
      */
-    List<OfficeHourEvent> findEventsByIdAndTime(@Param("id") String id, @Param("time") int time);
+    List<OfficeHourEventDisplay> findEventsByIdAndTime(@Param("id") String id, @Param("time") int time);
+
+    List<OfficeHourEventDisplay> findEventsByIdAndTimeApprove(@Param("id") String id, @Param("time") int time);
 
     List<String> findEventsById(int id);//这个是用于get时找同伙用的
 
@@ -39,7 +44,9 @@ public interface AppointmentMapper {
 
 
     //下面是ClassRoom的相关mapper接口设计
-    List<ClassroomEvent>findClassroomEventsByIdAndTime(@Param("id") String id, @Param("time") int time);
+    List<ClassroomEventDisplay> findClassroomEventsByIdAndTime(@Param("id") String id, @Param("time") int time);
+
+    List<ClassroomEventDisplay> findClassroomEvents(@Param("userId") String userId, @Param("time") int time);
 
     List<String> searchClassroomById(int id);//这个是用于get时找同伙用的
 
@@ -49,11 +56,10 @@ public interface AppointmentMapper {
 
     List<String> findAllClassroomIds();
 
-    List<Map<String, String>> findClassroomsByIds(@Param("ids") List<String> ids);
+    List<Map<String, Object>> findClassroomsByIds(@Param("ids") List<String> ids);
 
     List<Map<String, Object>> findAppointmentsByClassroomId(@Param("classroomId") String classroomId);
 
-    @Select("SELECT id FROM classroom WHERE classroom_name = #{classroomName}")
     int findClassroomIdByName(@Param("classroomName") String classroomName);
 
     void insertClassroomEvent(@Param("classroomEvent") ClassroomEvent classroomEvent);

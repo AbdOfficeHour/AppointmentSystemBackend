@@ -164,7 +164,8 @@ public class TableInfoService {
                         .map(officeHourEvent -> new TableEvent(
                                 officeHourEvent.getAppointmentDate(),
                                 officeHourEvent.getStartTime(),
-                                officeHourEvent.getEndTime()
+                                officeHourEvent.getEndTime(),
+                                officeHourEvent.getState()
                         ))
                         .toList()
         );
@@ -212,7 +213,8 @@ public class TableInfoService {
                         .map(classroomEvent -> new TableEvent(
                                 classroomEvent.getAppointmentDate(),
                                 classroomEvent.getStartTime(),
-                                classroomEvent.getEndTime()
+                                classroomEvent.getEndTime(),
+                                classroomEvent.getState()
                         ))
                         .toList()
         );
@@ -231,7 +233,7 @@ public class TableInfoService {
         Map<Long,List<TableEvent>> dateMapTableEvent = new HashMap<>();
         for (TableEvent tableEvent: tableEvents){
             Long eventDate = timeUtils.toTimeStamp(tableEvent.getAppointmentDate().atStartOfDay());
-
+            if(tableEvent.getState() == 6)continue;
 
             if(dateMapTableEvent.containsKey(eventDate)){
                 // 如果这个日期存在的话

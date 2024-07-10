@@ -39,6 +39,7 @@ public class UserController {
         @SuppressWarnings("unchecked")
         HashMap<String, List<String>> userAuth = (HashMap<String, List<String>>) request.getAttribute("userAuth");
         Map<String,Object> map = new HashMap<>();
+        map.put("userID",userInfo.getId());
         map.put("username",userInfo.getUsername());
         map.put("email",userInfo.getEmail());
         map.put("phone",userInfo.getPhone());
@@ -65,7 +66,9 @@ public class UserController {
                         return map;
                     })
                     .toList();
-            return new ResponseMap(0,"成功",userListAfterFilter);
+            return new ResponseMap(0,"成功",new HashMap<String,Object>(){{
+                put("userList",userListAfterFilter);
+            }});
         }catch(Exception ignored){
             return new ResponseMap(1,"失败",null);
         }

@@ -62,7 +62,7 @@ app.post('/login', (req, res) => {
                 res
                     .status(200)
                     .json({
-                        token: jwt.sign({id: u.id}, secretKey, {expiresIn: '1h'})
+                        token: jwt.sign({id: u.id}, secretKey, {expiresIn: '2h'})
                     });
                 return;
             }
