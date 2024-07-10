@@ -4,19 +4,20 @@ import io.github.abdofficehour.appointmentsystem.config.Properties;
 import io.github.abdofficehour.appointmentsystem.mapper.*;
 import io.github.abdofficehour.appointmentsystem.pojo.data.ClassroomEvent;
 import io.github.abdofficehour.appointmentsystem.pojo.data.OfficeHourEvent;
+import io.github.abdofficehour.appointmentsystem.pojo.data.TeacherBanTime;
 import io.github.abdofficehour.appointmentsystem.pojo.data.TeacherTimeTable;
 import io.github.abdofficehour.appointmentsystem.pojo.schema.classroomClassification.ClassroomClassificationSchema;
 import io.github.abdofficehour.appointmentsystem.pojo.schema.classroomClassification.ClassroomsInClassification;
 import io.github.abdofficehour.appointmentsystem.pojo.schema.teacherClassification.TeacherClassificationSchema;
 import io.github.abdofficehour.appointmentsystem.pojo.schema.teacherClassification.TeachersInClassification;
 import io.github.abdofficehour.appointmentsystem.pojo.schema.timeTable.*;
+import io.github.abdofficehour.appointmentsystem.pojo.schema.timeTable.Period;
+import org.apache.ibatis.type.NStringTypeHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.*;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Service
@@ -48,11 +49,8 @@ public class TableInfoService {
      * @return TeacherClassificationSchema列表 用于记录officeHour教师类型对应教师
      */
     public List<TeachersInClassification> getOfficeHourPicker(){
-        LocalDate today = LocalDate.now();
-        LocalDate dayAfterLen = today.plusDays(properties.getDateLen());
-
         // 读取所有的teacher相关的classification
-        List<TeacherClassificationSchema> teacherClassificationSchemas = userInfoMapper.selectAllClassification(today,dayAfterLen);
+        List<TeacherClassificationSchema> teacherClassificationSchemas = userInfoMapper.selectAllClassification();
         // 用于存放teacher的信息
         Map<String, TeachersInClassification> teacherMap = new HashMap<>();
         for(TeacherClassificationSchema teacherClassificationSchema : teacherClassificationSchemas){
@@ -149,20 +147,6 @@ public class TableInfoService {
 
         // 读取教师的officehour
         List<OfficeHourEvent> officeHourEvents = officeHourEventMapper.selectOfficeHourEventByTeacherIdAndForDayLen(teacherId, today, todayAfterDayLen);
-
-        /*
-        检查一下该教师是否还可预约
-        如果是今天或者之后没有officeHour就不能预约
-        否则就到最后一天officeHour为止
-         */
-
-        if(!specialTimes.isEmpty()){
-            Instant instant = Instant.ofEpochMilli(specialTimes.get(specialTimes.size()-1).getDate()).atZone(ZoneOffset.UTC).toInstant();
-            todayAfterDayLen = LocalDate.ofInstant(instant,ZoneOffset.UTC);
-        }else{
-            // 不应该有时间表的情况
-            return new OfficeHourTimetable(name,specialTimes,null);
-        }
 
         // 获取的最终timeTable格式
         List<TimeTable> formatTimetable = formatTimetable(
@@ -323,5 +307,34 @@ public class TableInfoService {
         }
 
         return resultTimeTable;
+    }
+
+    /**
+     * 用于教师禁用时间段------------from：ymz方便修改
+     */
+    public void banTeacher(String teacherId, TeacherBanTime banRequest){
+        // 获取教师的名字
+        String name = userInfoMapper.selectById(teacherId).getUsername();
+
+        OfficeHourEvent banTime = new OfficeHourEvent();
+        banTime.setTeacher(name);
+        banTime.setState(0);
+        LocalDateTime startDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(banRequest.getStartDate()), ZoneId.systemDefault());
+        LocalDateTime endDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(banRequest.getEndDate()), ZoneId.systemDefault());
+        LocalDateTime startTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(banRequest.getStartTime()), ZoneId.systemDefault());
+        LocalDateTime endTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(banRequest.getEndTime()), ZoneId.systemDefault());
+        LocalDateTime modifiedStart = startTime.withYear(startDate.getYear())
+                .withMonth(startDate.getMonthValue())
+                .withDayOfMonth(startDate.getDayOfMonth());
+        LocalDateTime modifiedEnd = endTime.withYear(endDate.getYear())
+                .withMonth(endDate.getMonthValue())
+                .withDayOfMonth(endDate.getDayOfMonth());
+        banTime.setStartTime(modifiedStart);
+        banTime.setEndTime(modifiedEnd);
+        long daysBetween = ChronoUnit.DAYS.between(startDate, endDate);
+        for (int i = 0; i <= daysBetween; i++) {
+            //利用for循环添加禁用天数
+            officeHourEventMapper.insertOfficeHourEvent(banTime);
+        }
     }
 }

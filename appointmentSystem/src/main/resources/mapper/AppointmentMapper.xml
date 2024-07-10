@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="io.github.abdofficehour.appointmentsystem.mapper.AppointmentMapper">
+    <select id="findEventsByIdAndTime" resultType="io.github.abdofficehour.appointmentsystem.pojo.data.OfficeHourEvent">
+        select *
+        from officehourevent
+        WHERE (student = #{id} OR teacher = #{id})
+          AND appointmentDate >= DATE_SUB(CURRENT_DATE, INTERVAL #{time} MONTH)
+        order by appointmentDate desc
+    </select>
+
+    <select id="findEventsById" resultType="String">
+        select user_id
+        from officehoureventpresent
+        WHERE event_id = #{id}
+    </select>
+
+    <select id="findEventById" resultType="io.github.abdofficehour.appointmentsystem.pojo.data.OfficeHourEvent">
+        SELECT * FROM officehourevent WHERE id = #{id}
+    </select>
+
+    <!-- 更新事件信息 -->
+    <update id="updateEvent">
+        UPDATE officehourevent
+        SET
+            state = #{state},
+            refuseResult = #{refuseResult},
+            workSummary = #{workSummary}
+        WHERE id = #{id}
+    </update>
+
+    <select id="findAllTeacherIds" resultType="String">
+        SELECT DISTINCT teacherid
+        FROM teachertimetable
+        WHERE appointmentDate > CURRENT_DATE
+    </select>
+
+    <select id="findTeacherNamesByIds" resultType="Map">
+        SELECT id as teacherID, username as teacherName
+        FROM userinfo
+        WHERE id IN
+        <foreach item="id" collection="ids" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="findAppointmentsByTeacherId" resultType="Map">
+        SELECT appointmentDate, startTime, endTime
+        FROM teachertimetable
+        WHERE teacherID = #{teacherId}
+          AND appointmentDate > CURRENT_DATE
+    </select>
+
+    <insert id="insertAppointment" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO officehourevent (appointmentDate, startTime, endTime, student, teacher, note, question, state)
+        VALUES (#{appointmentDate}, #{startTime}, #{endTime}, #{student}, #{teacher}, #{note}, #{question}, 2)
+    </insert>
+
+
+<!--下面是classroom相关接口-->
+
+    <select id="findClassroomEventsByIdAndTime" resultType="io.github.abdofficehour.appointmentsystem.pojo.data.ClassroomEvent">
+        select *
+        from classroomevent
+        WHERE applicant = #{id}
+          AND appointmentDate >= DATE_SUB(CURRENT_DATE, INTERVAL #{time} MONTH)
+        order by appointmentDate desc
+    </select>
+
+    <select id="searchClassroomById" resultType="String">
+        select user_id
+        from classroomeventpresent
+        WHERE event_id = #{id}
+    </select>
+
+    <select id="findClassroomEventById" resultType="io.github.abdofficehour.appointmentsystem.pojo.data.ClassroomEvent">
+        SELECT * FROM classroomevent WHERE id = #{id}
+    </select>
+
+    <update id="updateClassroomEvent">
+        UPDATE classroomevent
+        SET
+            state = #{state},
+        WHERE id = #{id}
+    </update>
+
+    <select id="findAllClassroomIds" resultType="String">
+        SELECT DISTINCT classroom
+        FROM classroomtimetable
+        WHERE appointmentDate > CURRENT_DATE
+    </select>
+
+    <select id="findClassroomsByIds" resultType="Map">
+        SELECT id as id, classroom_name as classroom
+        FROM classroom
+        WHERE id IN
+        <foreach item="id" collection="ids" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="findAppointmentsByClassroomId" resultType="Map">
+        SELECT appointmentDate, startTime, endTime
+        FROM classroomtimetable
+        WHERE classroom = #{classroomId}
+          AND appointmentDate > CURRENT_DATE
+    </select>
+
+    <insert id="insertClassroomEvent" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO classroomevent (classroom, appointmentDate, startTime, endTime, isMedia, isComputer, isSound, present, aim, events, state)
+        VALUES (#{classroom}, #{appointmentDate}, #{startTime}, #{endTime}, #{isMedia}, #{isComputer}, #{isSound}, #{present}, #{aim}, #{events}, #{state})
+    </insert>
+
+</mapper>
