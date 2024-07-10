@@ -57,6 +57,12 @@
         VALUES (#{appointmentDate}, #{startTime}, #{endTime}, #{student}, #{teacher}, #{note}, #{question}, 2)
     </insert>
 
+    <!-- 插入参与成员记录 -->
+    <insert id="insertOfficeHourEventPresent">
+        INSERT INTO officehoureventpresent (eventId, studentId)
+        VALUES (#{eventId}, #{studentId})
+    </insert>
+
 
 <!--下面是classroom相关接口-->
 
@@ -107,9 +113,21 @@
           AND appointmentDate > CURRENT_DATE
     </select>
 
+    <!-- 根据 classroom_name 查询 classroom_id -->
+    <select id="findClassroomIdByName" resultType="int">
+        SELECT id FROM classroom WHERE classroom_name = #{classroomName}
+    </select>
+
+    <!-- 插入新的教室预约记录 -->
     <insert id="insertClassroomEvent" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO classroomevent (classroom, appointmentDate, startTime, endTime, isMedia, isComputer, isSound, present, aim, events, state)
-        VALUES (#{classroom}, #{appointmentDate}, #{startTime}, #{endTime}, #{isMedia}, #{isComputer}, #{isSound}, #{present}, #{aim}, #{events}, #{state})
+        INSERT INTO classroomevent (classroom_id, appointmentDate, startTime, endTime, isMedia, isComputer, isSound, aim, events, state)
+        VALUES (#{classroomId}, #{appointmentDate}, #{startTime}, #{endTime}, #{isMedia}, #{isComputer}, #{isSound}, #{aim.value}, #{events}, #{state})
+    </insert>
+
+    <!-- 插入参与成员记录 -->
+    <insert id="insertClassroomEventPresent">
+        INSERT INTO classroomeventpresent (eventId, studentId)
+        VALUES (#{eventId}, #{studentId})
     </insert>
 
 </mapper>
