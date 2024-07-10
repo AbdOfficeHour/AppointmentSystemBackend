@@ -147,11 +147,12 @@ public class AppointmentController {
         Map<String, Object> time = (Map<String, Object>) requestBody.get("time");
         String note = (String) requestBody.get("note");
         String question = (String) requestBody.get("question");
+        List<String> present = (List<String>) requestBody.get("present");
 
         // 从 request 中获取学生信息
         String student = ((UserInfo) request.getAttribute("userinfo")).getId();
 
-        boolean success = appointmentService.createAppointment(student, teacher, time, note, question);
+        boolean success = appointmentService.createAppointment(student, teacher, time, note, question, present);
 
         if (success) {
             return new ResponseMap(0, "预约成功", null);
@@ -271,18 +272,19 @@ public class AppointmentController {
             @ApiResponse(responseCode = "401")
     })
     @PostMapping("/list/classroom")
-    public ResponseMap createClassroomAppointment(@RequestBody Map<String, Object> requestBody, HttpServletRequest request) {
-        String classroom = (String) requestBody.get("classroom");
+    public ResponseMap createClassroomEvent(@RequestBody Map<String, Object> requestBody) {
+        String classroomName = (String) requestBody.get("classroom");
         Map<String, Object> time = (Map<String, Object>) requestBody.get("time");
         boolean isMedia = (Boolean) requestBody.get("isMedia");
         boolean isComputer = (Boolean) requestBody.get("isComputer");
         boolean isSound = (Boolean) requestBody.get("isSound");
-        String present = requestBody.get("present").toString();
+        List<String> present = (List<String>) requestBody.get("present");
         String aim = (String) requestBody.get("aim");
         String events = (String) requestBody.get("events");
         int state = (Integer) requestBody.get("state");
 
-        boolean success = appointmentService.createClassroomEvent(classroom, time, isMedia, isComputer, isSound, present, aim, events, state);
+        boolean success = appointmentService.createClassroomEvent(classroomName, time, isMedia, isComputer, isSound, present, aim, events, state);
+
         if (success) {
             return new ResponseMap(0, "预约成功", null);
         } else {

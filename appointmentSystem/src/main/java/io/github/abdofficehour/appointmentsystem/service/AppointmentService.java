@@ -8,6 +8,7 @@ import io.github.abdofficehour.appointmentsystem.pojo.data.ClassroomEvent;
 import io.github.abdofficehour.appointmentsystem.pojo.data.OfficeHourEvent;
 import io.github.abdofficehour.appointmentsystem.pojo.data.TeacherClassification;
 import io.github.abdofficehour.appointmentsystem.pojo.data.UserInfo;
+import io.github.abdofficehour.appointmentsystem.pojo.enumclass.Aim;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -123,7 +124,7 @@ public class AppointmentService {
         return new ArrayList<>(dateTimeMap.values());
     }
 
-    public boolean createAppointment(String student, String teacher, Map<String, Object> time, String note, String question) {
+    public boolean createAppointment(String student, String teacher, Map<String, Object> time, String note, String question, List<String> present) {
         try {
             long dateTimestamp = ((Number) time.get("date")).longValue();
             long startTimeTimestamp = ((Number) time.get("start_time")).longValue();
@@ -144,6 +145,11 @@ public class AppointmentService {
             appointment.setState(2);
 
             appointmentMapper.insertAppointment(appointment);
+
+            int eventId = appointment.getId();
+            for (String studentId : present) {
+                appointmentMapper.insertOfficeHourEventPresent(eventId, studentId);
+            }
 
             return true;
         } catch (Exception e) {
@@ -236,8 +242,10 @@ public class AppointmentService {
         return new ArrayList<>(dateTimeMap.values());
     }
 
-    public boolean createClassroomEvent(String classroom, Map<String, Object> time, boolean isMedia, boolean isComputer, boolean isSound, String present, String aim, String events, int state) {
+    public boolean createClassroomEvent(String classroomName, Map<String, Object> time, boolean isMedia, boolean isComputer, boolean isSound, List<String> present, String aim, String events, int state) {
         try {
+            int classroomId = appointmentMapper.findClassroomIdByName(classroomName);
+
             long dateTimestamp = ((Number) time.get("date")).longValue();
             long startTimeTimestamp = ((Number) time.get("start_time")).longValue();
             long endTimeTimestamp = ((Number) time.get("end_time")).longValue();
@@ -247,19 +255,23 @@ public class AppointmentService {
             LocalDateTime endTime = Instant.ofEpochSecond(endTimeTimestamp).atZone(ZoneOffset.UTC).toLocalDateTime();
 
             ClassroomEvent classroomEvent = new ClassroomEvent();
-            classroomEvent.setClassroom(classroom);
+            classroomEvent.setClassroom(classroomId);
             classroomEvent.setAppointmentDate(appointmentDate);
             classroomEvent.setStartTime(startTime);
             classroomEvent.setEndTime(endTime);
             classroomEvent.setIsMedia(isMedia);
             classroomEvent.setIsComputer(isComputer);
             classroomEvent.setIsSound(isSound);
-            classroomEvent.setPresent(present);
-            classroomEvent.setAim(aim);
+            classroomEvent.setAim(Aim.fromValue(aim));
             classroomEvent.setEvents(events);
             classroomEvent.setState(state);
 
-            AppointmentMapper.insertClassroomEvent(classroomEvent);
+            appointmentMapper.insertClassroomEvent(classroomEvent);
+
+            int eventId = classroomEvent.getId();
+            for (String studentId : present) {
+                appointmentMapper.insertClassroomEventPresent(eventId, studentId);
+            }
 
             return true;
         } catch (Exception e) {
