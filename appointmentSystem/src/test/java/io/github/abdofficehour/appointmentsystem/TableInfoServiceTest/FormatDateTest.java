@@ -31,17 +31,20 @@ public class FormatDateTest {
            add(new TableEvent(
                 LocalDate.of(2024,7,4),
                 LocalDateTime.of(2024,7,4,14,30),
-                LocalDateTime.of(2024,7,4,15,10)
+                LocalDateTime.of(2024,7,4,15,10),
+                   2
            ));
             add(new TableEvent(
                     LocalDate.of(2024,7,4),
                     LocalDateTime.of(2024,7,4,15,40),
-                    LocalDateTime.of(2024,7,4,16,10)
+                    LocalDateTime.of(2024,7,4,16,10),
+                    2
             ));
             add(new TableEvent(
                     LocalDate.of(2024,7,6),
                     LocalDateTime.of(2024,7,6,14,30),
-                    LocalDateTime.of(2024,7,6,15,10)
+                    LocalDateTime.of(2024,7,6,15,10),
+                    2
             ));
         }};
 

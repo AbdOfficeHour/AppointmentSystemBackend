@@ -114,7 +114,7 @@ create table classroomevent
     isSound         tinyint(1)                                    not null comment 'Is Sound',
     aim             enum ('会议', '研讨', '团建', '讲座', '其他') not null comment 'Aim',
     events          text                                          null comment 'Events',
-    approver        varchar(255)                                  null comment 'Approver ID',
+    approve        varchar(255)                                  null comment 'Approver ID',
     state           int                                           null comment 'State',
     constraint classroomevent_ibfk_1
         foreign key (classroom) references classroom (id),

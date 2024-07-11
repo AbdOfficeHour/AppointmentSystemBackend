@@ -35,11 +35,15 @@ public class UserController {
     public ResponseMap getUserInfo(HttpServletRequest request){
 
         UserInfo userInfo = (UserInfo) request.getAttribute("userinfo");
+
+        @SuppressWarnings("unchecked")
+        HashMap<String, List<String>> userAuth = (HashMap<String, List<String>>) request.getAttribute("userAuth");
         Map<String,Object> map = new HashMap<>();
+        map.put("userID",userInfo.getId());
         map.put("username",userInfo.getUsername());
         map.put("email",userInfo.getEmail());
         map.put("phone",userInfo.getPhone());
-        map.put("userAuthority",userInfoService.SearchAuthorityByUser(userInfo.getId()));
+        map.put("userAuthority",userAuth);
 
 
         return new ResponseMap(0,"成功",map);
@@ -62,7 +66,9 @@ public class UserController {
                         return map;
                     })
                     .toList();
-            return new ResponseMap(0,"成功",userListAfterFilter);
+            return new ResponseMap(0,"成功",new HashMap<String,Object>(){{
+                put("userList",userListAfterFilter);
+            }});
         }catch(Exception ignored){
             return new ResponseMap(1,"失败",null);
         }

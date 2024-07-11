@@ -4,18 +4,21 @@ import io.github.abdofficehour.appointmentsystem.config.Properties;
 import io.github.abdofficehour.appointmentsystem.mapper.*;
 import io.github.abdofficehour.appointmentsystem.pojo.data.ClassroomEvent;
 import io.github.abdofficehour.appointmentsystem.pojo.data.OfficeHourEvent;
+import io.github.abdofficehour.appointmentsystem.pojo.data.TeacherBanTime;
 import io.github.abdofficehour.appointmentsystem.pojo.data.TeacherTimeTable;
 import io.github.abdofficehour.appointmentsystem.pojo.schema.classroomClassification.ClassroomClassificationSchema;
 import io.github.abdofficehour.appointmentsystem.pojo.schema.classroomClassification.ClassroomsInClassification;
 import io.github.abdofficehour.appointmentsystem.pojo.schema.teacherClassification.TeacherClassificationSchema;
 import io.github.abdofficehour.appointmentsystem.pojo.schema.teacherClassification.TeachersInClassification;
 import io.github.abdofficehour.appointmentsystem.pojo.schema.timeTable.*;
+import io.github.abdofficehour.appointmentsystem.pojo.schema.timeTable.Period;
+import io.github.abdofficehour.appointmentsystem.utils.TimeUtils;
+import org.apache.ibatis.type.NStringTypeHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.*;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Service
@@ -42,13 +45,19 @@ public class TableInfoService {
     @Autowired
     private Properties properties;
 
+    @Autowired
+    private TimeUtils timeUtils;
+
     /**
      * 获取officehour选择器
      * @return TeacherClassificationSchema列表 用于记录officeHour教师类型对应教师
      */
     public List<TeachersInClassification> getOfficeHourPicker(){
+        LocalDate startDate = LocalDate.now();
+        LocalDate endDate = startDate.plusDays(properties.getDateLen());
+
         // 读取所有的teacher相关的classification
-        List<TeacherClassificationSchema> teacherClassificationSchemas = userInfoMapper.selectAllClassification();
+        List<TeacherClassificationSchema> teacherClassificationSchemas = userInfoMapper.selectAllClassification(startDate,endDate);
         // 用于存放teacher的信息
         Map<String, TeachersInClassification> teacherMap = new HashMap<>();
         for(TeacherClassificationSchema teacherClassificationSchema : teacherClassificationSchemas){
@@ -95,14 +104,14 @@ public class TableInfoService {
                 // 读取classroom的信息
                 Map<String,Object> classrooms = new HashMap<>();
                 classrooms.put("classroomId", iterClassroom.getClassroomId());
-                classrooms.put("classroomName", iterClassroom.getClassroomName());
+                classrooms.put("classroom", iterClassroom.getClassroom());
                 // 将classroom信息放入classroomClassificationSchema
                 classroomsInClassification.setClassrooms(new ArrayList<>(){{add(classrooms);}});
                 classroomsInClassificationMap.put(iterClassroom.getClassification(), classroomsInClassification);
             }else{
                 classroomsInClassificationMap.get(iterClassroom.getClassification()).getClassrooms().add(new HashMap<>(){{
                     put("classroomId", iterClassroom.getClassroomId());
-                    put("classroomName", iterClassroom.getClassroomName());
+                    put("classroom", iterClassroom.getClassroom());
                 }});
             }
         }
@@ -134,9 +143,9 @@ public class TableInfoService {
         List<SpecialTime> specialTimes =
                 teacherTimeTables.stream().map(teacherTimeTable ->
                     new SpecialTime(
-                    teacherTimeTable.getAppointmentDate().atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli(),
-                    teacherTimeTable.getStartTime().toInstant(ZoneOffset.UTC).toEpochMilli(),
-                    teacherTimeTable.getEndTime().toInstant(ZoneOffset.UTC).toEpochMilli())
+                    timeUtils.toTimeStamp(teacherTimeTable.getAppointmentDate().atStartOfDay()),
+                    timeUtils.toTimeStamp(teacherTimeTable.getStartTime()),
+                    timeUtils.toTimeStamp(teacherTimeTable.getEndTime()))
                 ).toList();
 
         /*
@@ -155,7 +164,8 @@ public class TableInfoService {
                         .map(officeHourEvent -> new TableEvent(
                                 officeHourEvent.getAppointmentDate(),
                                 officeHourEvent.getStartTime(),
-                                officeHourEvent.getEndTime()
+                                officeHourEvent.getEndTime(),
+                                officeHourEvent.getState()
                         ))
                         .toList()
         );
@@ -186,9 +196,9 @@ public class TableInfoService {
         List<SpecialTime> specialTimes =
                 classroomTimeTableList.stream().map(classroomTimeTable ->
                         new SpecialTime(
-                                classroomTimeTable.getAppointmentDate().atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli(),
-                                classroomTimeTable.getStartTime().toInstant(ZoneOffset.UTC).toEpochMilli(),
-                                classroomTimeTable.getEndTime().toInstant(ZoneOffset.UTC).toEpochMilli())
+                                timeUtils.toTimeStamp(classroomTimeTable.getAppointmentDate().atStartOfDay()),
+                                timeUtils.toTimeStamp(classroomTimeTable.getStartTime()),
+                                timeUtils.toTimeStamp(classroomTimeTable.getEndTime()))
                 ).toList();
 
         // 转换timetable格式
@@ -203,7 +213,8 @@ public class TableInfoService {
                         .map(classroomEvent -> new TableEvent(
                                 classroomEvent.getAppointmentDate(),
                                 classroomEvent.getStartTime(),
-                                classroomEvent.getEndTime()
+                                classroomEvent.getEndTime(),
+                                classroomEvent.getState()
                         ))
                         .toList()
         );
@@ -221,8 +232,8 @@ public class TableInfoService {
         // 使用map记录每一个日期对应的officeHourEvent
         Map<Long,List<TableEvent>> dateMapTableEvent = new HashMap<>();
         for (TableEvent tableEvent: tableEvents){
-            Long eventDate = tableEvent.getAppointmentDate().atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli();
-
+            Long eventDate = timeUtils.toTimeStamp(tableEvent.getAppointmentDate().atStartOfDay());
+            if(tableEvent.getState() == 6)continue;
 
             if(dateMapTableEvent.containsKey(eventDate)){
                 // 如果这个日期存在的话
@@ -246,16 +257,16 @@ public class TableInfoService {
             LocalDateTime endOfToday = iterDate.atTime(properties.getEndHour(),properties.getEndMiu());
 
             // 设置日期
-            thisDateTimetable.setDate(iterDate.atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli());
+            thisDateTimetable.setDate(timeUtils.toTimeStamp(iterDate.atStartOfDay()));
 
             // 查询对应日期的事件
-            List<TableEvent> thisTableEvent = dateMapTableEvent.get(iterDate.atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli());
+            List<TableEvent> thisTableEvent = dateMapTableEvent.get(timeUtils.toTimeStamp(iterDate.atStartOfDay()));
 
             // 不存在事件的情况
             if (Objects.isNull(thisTableEvent)){
                 List<Period> busyTime = new ArrayList<>();
                 List<Period> availableTime = new ArrayList<>(){{
-                    add(new Period(startOfToday.toInstant(ZoneOffset.UTC).toEpochMilli(),startOfToday.toInstant(ZoneOffset.UTC).toEpochMilli()));
+                    add(new Period(timeUtils.toTimeStamp(startOfToday),timeUtils.toTimeStamp(endOfToday)));
                 }};
 
                 thisDateTimetable.setBusy(busyTime);
@@ -270,8 +281,8 @@ public class TableInfoService {
             // 获取繁忙时间
             List<Period> busyTime = thisTableEvent.stream()
                     .map(officeHourEvent -> new Period(
-                            officeHourEvent.getStartTime().toInstant(ZoneOffset.UTC).toEpochMilli(),
-                            officeHourEvent.getEndTime().toInstant(ZoneOffset.UTC).toEpochMilli()
+                            timeUtils.toTimeStamp(officeHourEvent.getStartTime()),
+                            timeUtils.toTimeStamp(officeHourEvent.getEndTime())
                     ))
                     .toList();
 
@@ -280,7 +291,7 @@ public class TableInfoService {
 
             // 特殊情况，如果有busy time的话，就从officeHourTime开始
             Period firstAvailablePeriod = new Period();
-            firstAvailablePeriod.setStart(startOfToday.toInstant(ZoneOffset.UTC).toEpochMilli());
+            firstAvailablePeriod.setStart(timeUtils.toTimeStamp(startOfToday));
             firstAvailablePeriod.setEnd(busyTime.get(0).getStart());
             availableTime.add(firstAvailablePeriod);
 
@@ -295,7 +306,7 @@ public class TableInfoService {
             // 同理结束时间也一样
             Period endAvailablePeriod = new Period();
             endAvailablePeriod.setStart(busyTime.get(busyTime.size()-1).getEnd());
-            endAvailablePeriod.setEnd(endOfToday.toInstant(ZoneOffset.UTC).toEpochMilli());
+            endAvailablePeriod.setEnd(timeUtils.toTimeStamp(endOfToday));
             availableTime.add(endAvailablePeriod);
 
             thisDateTimetable.setBusy(busyTime);
@@ -305,5 +316,34 @@ public class TableInfoService {
         }
 
         return resultTimeTable;
+    }
+
+    /**
+     * 用于教师禁用时间段------------from：ymz方便修改
+     */
+    public void banTeacher(String teacherId, TeacherBanTime banRequest){
+        // 获取教师的名字
+        String name = userInfoMapper.selectById(teacherId).getUsername();
+
+        OfficeHourEvent banTime = new OfficeHourEvent();
+        banTime.setTeacher(name);
+        banTime.setState(0);
+        LocalDateTime startDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(banRequest.getStartDate()), ZoneId.systemDefault());
+        LocalDateTime endDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(banRequest.getEndDate()), ZoneId.systemDefault());
+        LocalDateTime startTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(banRequest.getStartTime()), ZoneId.systemDefault());
+        LocalDateTime endTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(banRequest.getEndTime()), ZoneId.systemDefault());
+        LocalDateTime modifiedStart = startTime.withYear(startDate.getYear())
+                .withMonth(startDate.getMonthValue())
+                .withDayOfMonth(startDate.getDayOfMonth());
+        LocalDateTime modifiedEnd = endTime.withYear(endDate.getYear())
+                .withMonth(endDate.getMonthValue())
+                .withDayOfMonth(endDate.getDayOfMonth());
+        banTime.setStartTime(modifiedStart);
+        banTime.setEndTime(modifiedEnd);
+        long daysBetween = ChronoUnit.DAYS.between(startDate, endDate);
+        for (int i = 0; i <= daysBetween; i++) {
+            //利用for循环添加禁用天数
+            officeHourEventMapper.insertOfficeHourEvent(banTime);
+        }
     }
 }
