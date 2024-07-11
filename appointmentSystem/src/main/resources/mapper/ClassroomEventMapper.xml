@@ -20,7 +20,7 @@
 
     <insert id="insertClassroomEvent">
         insert into classroomevent
-        (appointmentDate, startTime, endTime, applicant, classroom, isMedia, isComputer, isSound, aim, events, approver, state)
+        (appointmentDate, startTime, endTime, applicant, classroom, isMedia, isComputer, isSound, aim, events, approve, state)
         value
         (
          #{appointmentDate},
@@ -40,7 +40,7 @@
 
     <insert id="insertClassroomEventBatch">
         insert into classroomevent
-        (appointmentDate, startTime, endTime, applicant, classroom, isMedia, isComputer, isSound, aim, events, approver, state)
+        (appointmentDate, startTime, endTime, applicant, classroom, isMedia, isComputer, isSound, aim, events, approve, state)
         values
             <foreach collection="classroomEvents" item="classroomEvent" separator=",">
                 (
