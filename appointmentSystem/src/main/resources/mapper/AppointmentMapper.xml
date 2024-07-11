@@ -215,7 +215,7 @@
                                     isSound,
                                     aim,
                                     events,
-                                    approver,
+                                    approve,
                                     state)
         VALUES (
                 #{classroomEvent.appointmentDate},
