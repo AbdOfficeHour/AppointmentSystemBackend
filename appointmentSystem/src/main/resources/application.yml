@@ -19,7 +19,7 @@ mybatis:
 custom:
   config:
     main-app-url: http://localhost:3000
-    token-url: /auth/token
+    token-url: /api/token_verify
 
     date-len: 7
     start-hour: 8

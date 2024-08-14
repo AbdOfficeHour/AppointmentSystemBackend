@@ -75,8 +75,8 @@ app.post('/login', (req, res) => {
 
 });
 
-app.get("/auth/token",(req,res)=>{
-    const token = req.query.token
+app.post("/api/token_verify",(req,res)=>{
+    const token = req.body.token
     try{
         const decoded = jwt.verify(token,secretKey)
         res.status(200)
