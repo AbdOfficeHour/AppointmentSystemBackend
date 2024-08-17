@@ -62,7 +62,7 @@ app.post('/login', (req, res) => {
                 res
                     .status(200)
                     .json({
-                        token: jwt.sign({id: u.id}, secretKey, {expiresIn: '2h'})
+                        token: jwt.sign({id: u.id}, secretKey, {expiresIn: '24h'})
                     });
                 return;
             }
@@ -75,8 +75,8 @@ app.post('/login', (req, res) => {
 
 });
 
-app.get("/auth/token",(req,res)=>{
-    const token = req.query.token
+app.post("/api/token_verify",(req,res)=>{
+    const token = req.body.token
     try{
         const decoded = jwt.verify(token,secretKey)
         res.status(200)
@@ -90,6 +90,6 @@ app.get("/auth/token",(req,res)=>{
     }
 })
 
-app.listen(3000, () => {
+app.listen(3000, "0.0.0.0",() => {
     console.log('Server is running');
 })

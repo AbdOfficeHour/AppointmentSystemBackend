@@ -5,11 +5,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.abdofficehour.appointmentsystem.config.Properties;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.util.HashMap;
 import java.util.Objects;
 
 /**
@@ -27,29 +31,44 @@ public class RestRequestService {
     @Autowired
     private Properties properties;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     /**
      * 向鉴权中心验证token
      */
-    public String AuthToken(String token) throws JsonProcessingException {
+    public Boolean AuthToken(String token) throws JsonProcessingException {
 
-        String url = properties.getMainAppUrl() + properties.getTokenUrl() + String.format("?token=%s",token);
+        String url = properties.getMainAppUrl() + properties.getTokenUrl();
 
         try {
-            ResponseEntity<String> responseEntity = restTemplate.getForEntity(url, String.class);
+
+            // 创建请求头
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            // 创建请求体
+            String josnRequestBody = objectMapper.writeValueAsString(new HashMap<String,Object>(){{put("token",token);}});
+            HttpEntity<String> request = new HttpEntity<>(josnRequestBody,headers);
+            // 发起post请求
+            ResponseEntity<String> responseEntity = restTemplate.postForEntity(url,request,String.class);
+//            ResponseEntity<String> responseEntity = restTemplate.getForEntity(url, String.class);
 
 
             String responseStatus = responseEntity.getStatusCode().toString();
-            if (!Objects.equals(responseStatus, "200 OK")) {
-                return "";
-            }
+//            if (!Objects.equals(responseStatus, "200 OK")) {
+//                return "";
+//            }
+//
+//            String responseBody = responseEntity.getBody();
+//            ObjectMapper objectMapper = new ObjectMapper();
+//            JsonNode jsonNode = objectMapper.readTree(responseBody);
+//
+//            return jsonNode.get("data").get("id").asText();
 
-            String responseBody = responseEntity.getBody();
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode jsonNode = objectMapper.readTree(responseBody);
+            return Objects.equals(responseStatus, "200 OK");
 
-            return jsonNode.get("data").get("id").asText();
         }catch (Exception e){
-            return "";
+            return false;
         }
     }
 }
