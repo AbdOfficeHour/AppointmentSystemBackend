@@ -10,7 +10,7 @@
     </parent>
     <groupId>io.github.AbdofficeHour</groupId>
     <artifactId>appointmentSystem</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.1</version>
     <name>appointmentSystem</name>
     <description>appointmentSystem</description>
     <properties>

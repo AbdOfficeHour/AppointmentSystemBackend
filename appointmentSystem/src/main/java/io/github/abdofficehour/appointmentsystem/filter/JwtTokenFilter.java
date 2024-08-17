@@ -36,7 +36,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             }
         }
 
-        if(token.equals("")){
+        if(!token.equals("")){
             request.setAttribute("token",token);
             filterChain.doFilter(request,response);
         }else{

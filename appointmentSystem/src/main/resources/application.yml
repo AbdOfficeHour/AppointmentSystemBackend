@@ -4,8 +4,8 @@ spring:
 
   datasource:
     url: jdbc:mysql://localhost:3306/appointment_system?useSSL=false
-    username: root
-    password: 123456
+    username: abdn1
+    password: "@Abdn123456"
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   mvc:
@@ -18,7 +18,7 @@ mybatis:
 
 custom:
   config:
-    main-app-url: http://localhost:3000
+    main-app-url: http://sso.abdn.kirisame.cc/
     token-url: /api/token_verify
 
     date-len: 7
