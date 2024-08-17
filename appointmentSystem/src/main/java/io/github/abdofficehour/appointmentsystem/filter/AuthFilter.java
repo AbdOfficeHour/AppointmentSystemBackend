@@ -54,7 +54,7 @@ public class AuthFilter implements Filter {
             }
 
             JsonNode payload = objectMapper.readTree(Base64.getDecoder().decode(tokenStringList[1]));
-            String id = payload.get("id").asText();
+            String id = payload.get("user_id").asText();
 
             UserInfo userInfo = userInfoService.searchUserById(id);
             HashMap<String, List<String>> userAuth = userInfoService.SearchAuthorityByUser(id);

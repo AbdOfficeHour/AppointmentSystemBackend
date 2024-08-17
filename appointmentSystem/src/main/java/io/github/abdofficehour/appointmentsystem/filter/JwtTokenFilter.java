@@ -29,7 +29,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 String name = cookie.getName();
                 String value = cookie.getValue();
 
-                if(name.equals("access_token")){
+                if(name.equals("jwt_token")){
                     token = value;
                     break;
                 }
@@ -40,7 +40,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             request.setAttribute("token",token);
             filterChain.doFilter(request,response);
         }else{
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED,"未登录");
         }
     }
 }

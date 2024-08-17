@@ -68,6 +68,7 @@ public class RestRequestService {
             return Objects.equals(responseStatus, "200 OK");
 
         }catch (Exception e){
+            System.out.println(e);
             return false;
         }
     }

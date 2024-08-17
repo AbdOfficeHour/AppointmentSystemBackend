@@ -3,7 +3,7 @@ spring:
     name: appointmentSystem
 
   datasource:
-    url: jdbc:mysql://localhost:3306/appointment_system?useSSL=false
+    url: jdbc:mysql://localhost:3306/officehour_db?allowPublicKeyRetrieval=true&useSSL=false
     username: abdn1
     password: "@Abdn123456"
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -11,15 +11,20 @@ spring:
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
+    cors:
+
 
 mybatis:
   mapper-locations: classpath:mapper/*.xml
   type-aliases-package: io.github.abdofficehour.appointmentsystem.pojo
 
+server:
+  port: 8032
+
 custom:
   config:
     main-app-url: http://sso.abdn.kirisame.cc/
-    token-url: /api/token_verify
+    token-url: api/token_verify/
 
     date-len: 7
     start-hour: 8

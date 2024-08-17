@@ -24,6 +24,7 @@ public class UserInfoService {
         try{
             userInfo = userInfoMapper.selectById(id);
         }catch (Exception e){
+            e.printStackTrace();
             userInfo = null;
         }
         return userInfo;
