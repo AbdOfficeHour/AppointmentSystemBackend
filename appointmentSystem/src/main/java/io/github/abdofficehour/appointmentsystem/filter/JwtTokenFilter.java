@@ -3,6 +3,7 @@ package io.github.abdofficehour.appointmentsystem.filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebFilter;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.core.annotation.Order;
@@ -20,10 +21,23 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
-        String token = request.getHeader("Authorization");
-        if(token != null && token.startsWith("Bearer ")){
-            String jwtToken = token.substring(7);
-            request.setAttribute("token",jwtToken);
+        String token = "";
+        Cookie[] cookies = request.getCookies();
+
+        if(cookies != null){
+            for (Cookie cookie:cookies){
+                String name = cookie.getName();
+                String value = cookie.getValue();
+
+                if(name.equals("access_token")){
+                    token = value;
+                    break;
+                }
+            }
+        }
+
+        if(token.equals("")){
+            request.setAttribute("token",token);
             filterChain.doFilter(request,response);
         }else{
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
