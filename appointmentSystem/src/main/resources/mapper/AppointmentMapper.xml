@@ -2,12 +2,46 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="io.github.abdofficehour.appointmentsystem.mapper.AppointmentMapper">
-    <select id="findEventsByIdAndTime" resultType="io.github.abdofficehour.appointmentsystem.pojo.data.OfficeHourEvent">
-        select *
-        from officehourevent
+    <select id="findEventsByIdAndTime" resultType="io.github.abdofficehour.appointmentsystem.pojo.schema.officehourData.OfficeHourEventDisplay">
+        select
+            o.id as id,
+            o.appointmentDate as appointmentDate,
+            o.startTime as startTime,
+            o.endTime as endTime,
+            o.student as student,
+            o.teacher as teacher,
+            o.note as note,
+            o.question as question,
+            o.refuseResult as refuseResult,
+            o.workSummary as workSummary,
+            o.state as state,
+            u.username as teacherName
+        from officehourevent o
+        left join userinfo u on o.teacher = u.id
         WHERE (student = #{id} OR teacher = #{id})
-          AND appointmentDate >= DATE_SUB(CURRENT_DATE, INTERVAL #{time} MONTH)
-        order by appointmentDate desc
+          AND o.appointmentDate >= DATE_SUB(CURRENT_DATE, INTERVAL #{time} MONTH)
+        order by o.appointmentDate desc
+    </select>
+
+    <select id="findEventsByIdAndTimeApprove" resultType="io.github.abdofficehour.appointmentsystem.pojo.schema.officehourData.OfficeHourEventDisplay">
+        select
+            o.id as id,
+            o.appointmentDate as appointmentDate,
+            o.startTime as startTime,
+            o.endTime as endTime,
+            o.student as student,
+            o.teacher as teacher,
+            o.note as note,
+            o.question as question,
+            o.refuseResult as refuseResult,
+            o.workSummary as workSummary,
+            o.state as state,
+            u.username as studentName
+        from officehourevent o
+                 left join userinfo u on o.student = u.id
+        WHERE (student = #{id} OR teacher = #{id})
+          AND o.appointmentDate >= DATE_SUB(CURRENT_DATE, INTERVAL #{time} MONTH)
+        order by o.appointmentDate desc
     </select>
 
     <select id="findEventsById" resultType="String">
@@ -49,29 +83,76 @@
         SELECT appointmentDate, startTime, endTime
         FROM teachertimetable
         WHERE teacherID = #{teacherId}
-          AND appointmentDate > CURRENT_DATE
+          AND appointmentDate >= CURRENT_DATE
     </select>
 
     <insert id="insertAppointment" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO officehourevent (appointmentDate, startTime, endTime, student, teacher, note, question, state)
-        VALUES (#{appointmentDate}, #{startTime}, #{endTime}, #{student}, #{teacher}, #{note}, #{question}, 2)
+        VALUES (
+                #{appointment.appointmentDate},
+                #{appointment.startTime},
+                #{appointment.endTime},
+                #{appointment.student},
+                #{appointment.teacher},
+                #{appointment.note},
+                #{appointment.question},
+                2)
     </insert>
 
     <!-- 插入参与成员记录 -->
     <insert id="insertOfficeHourEventPresent">
-        INSERT INTO officehoureventpresent (eventId, studentId)
+        INSERT INTO officehoureventpresent (event_id, user_id)
         VALUES (#{eventId}, #{studentId})
     </insert>
 
 
 <!--下面是classroom相关接口-->
 
-    <select id="findClassroomEventsByIdAndTime" resultType="io.github.abdofficehour.appointmentsystem.pojo.data.ClassroomEvent">
-        select *
-        from classroomevent
-        WHERE applicant = #{id}
-          AND appointmentDate >= DATE_SUB(CURRENT_DATE, INTERVAL #{time} MONTH)
-        order by appointmentDate desc
+    <select id="findClassroomEventsByIdAndTime" resultType="io.github.abdofficehour.appointmentsystem.pojo.schema.classroomData.ClassroomEventDisplay">
+        select
+            ce.id,
+            ce.appointmentDate,
+            ce.startTime,
+            ce.endTime,
+            ce.applicant,
+            ce.classroom,
+            ce.isMedia,
+            ce.isComputer,
+            ce.isSound,
+            ce.aim,
+            ce.events,
+            ce.state,
+            c.classroom_name as ClassroomName
+        from classroomevent ce
+        left join classroom c on ce.classroom = c.id
+        WHERE ce.applicant = #{id}
+          AND ce.appointmentDate >= DATE_SUB(CURRENT_DATE, INTERVAL #{time} MONTH)
+        order by ce.appointmentDate desc
+    </select>
+
+    <select id="findClassroomEvents" resultType="io.github.abdofficehour.appointmentsystem.pojo.schema.classroomData.ClassroomEventDisplay">
+        select
+            ce.id,
+            ce.appointmentDate,
+            ce.startTime,
+            ce.endTime,
+            ce.applicant,
+            u.username as applicantName,
+            ce.classroom,
+            ce.isMedia,
+            ce.isComputer,
+            ce.isSound,
+            ce.aim,
+            ce.events,
+            ce.approve,
+            ce.state,
+            c.classroom_name as ClassroomName
+        from classroomevent ce
+        left join classroom c on ce.classroom = c.id
+        left join userinfo u on u.id = ce.applicant
+        WHERE
+            ce.appointmentDate >= DATE_SUB(CURRENT_DATE, INTERVAL #{time} MONTH)
+        order by ce.appointmentDate desc
     </select>
 
     <select id="searchClassroomById" resultType="String">
@@ -87,14 +168,17 @@
     <update id="updateClassroomEvent">
         UPDATE classroomevent
         SET
-            state = #{state},
+            <if test="approve">
+                approve = #{approve},
+            </if>
+            state = #{state}
         WHERE id = #{id}
     </update>
 
     <select id="findAllClassroomIds" resultType="String">
         SELECT DISTINCT classroom
         FROM classroomtimetable
-        WHERE appointmentDate > CURRENT_DATE
+        WHERE appointmentDate >= CURRENT_DATE
     </select>
 
     <select id="findClassroomsByIds" resultType="Map">
@@ -110,7 +194,7 @@
         SELECT appointmentDate, startTime, endTime
         FROM classroomtimetable
         WHERE classroom = #{classroomId}
-          AND appointmentDate > CURRENT_DATE
+          AND appointmentDate >= CURRENT_DATE
     </select>
 
     <!-- 根据 classroom_name 查询 classroom_id -->
@@ -120,13 +204,37 @@
 
     <!-- 插入新的教室预约记录 -->
     <insert id="insertClassroomEvent" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO classroomevent (classroom_id, appointmentDate, startTime, endTime, isMedia, isComputer, isSound, aim, events, state)
-        VALUES (#{classroomId}, #{appointmentDate}, #{startTime}, #{endTime}, #{isMedia}, #{isComputer}, #{isSound}, #{aim.value}, #{events}, #{state})
+        INSERT INTO classroomevent (
+                                    appointmentDate,
+                                    startTime,
+                                    endTime,
+                                    applicant,
+                                    classroom,
+                                    isMedia,
+                                    isComputer,
+                                    isSound,
+                                    aim,
+                                    events,
+                                    approve,
+                                    state)
+        VALUES (
+                #{classroomEvent.appointmentDate},
+                #{classroomEvent.startTime},
+                #{classroomEvent.endTime},
+                #{classroomEvent.applicant},
+                #{classroomEvent.classroom},
+                #{classroomEvent.isMedia},
+                #{classroomEvent.isComputer},
+                #{classroomEvent.isSound},
+                #{classroomEvent.aim.value},
+                #{classroomEvent.events},
+                #{classroomEvent.approve},
+                #{classroomEvent.state})
     </insert>
 
     <!-- 插入参与成员记录 -->
     <insert id="insertClassroomEventPresent">
-        INSERT INTO classroomeventpresent (eventId, studentId)
+        INSERT INTO classroomeventpresent (event_id, user_id)
         VALUES (#{eventId}, #{studentId})
     </insert>
 

@@ -1,12 +1,3 @@
-create table userinfo
-(
-    id       varchar(255) not null comment 'Primary Key'
-        primary key,
-    email    varchar(255) not null comment 'Email',
-    username varchar(255) not null comment 'Username',
-    phone    varchar(255) not null comment 'Phone'
-);
-
 create table classroom
 (
     id             int auto_increment comment 'Primary Key'
@@ -14,6 +5,14 @@ create table classroom
     classroom_name varchar(255) not null comment 'Classroom Name'
 )
     comment 'Classroom';
+
+create table classroomclassification
+(
+    id   int auto_increment comment 'Primary Key'
+        primary key,
+    name varchar(255) null
+)
+    comment 'the classification of classroom';
 
 create table classroomtimetable
 (
@@ -26,21 +25,22 @@ create table classroomtimetable
 )
     comment 'Classroom Time Table';
 
-create table classroomclassification
+create table classroomtoclassification
 (
-    id int auto_increment comment 'Primary Key' primary key ,
-    name varchar(255)
+    classroom      int null,
+    classification int null,
+    constraint classroomtoclassification_ibfk_1
+        foreign key (classroom) references classroom (id),
+    constraint classroomtoclassification_ibfk_2
+        foreign key (classification) references classroomclassification (id)
 )
-comment 'the classification of classroom';
+    comment 'classification to classroom';
 
-create table classroomToClassification
-(
-    classroom int,
-    classification int,
-    foreign key (classroom) references classroom(id),
-    foreign key (classification) references classroomclassification(id)
-)
-comment 'classification to classroom';
+create index classification
+    on classroomtoclassification (classification);
+
+create index classroom
+    on classroomtoclassification (classroom);
 
 create table credit
 (
@@ -49,25 +49,6 @@ create table credit
     credit_name varchar(255) not null comment 'Credit Name'
 )
     comment 'Credit';
-
-create table officehourevent
-(
-    id              int auto_increment comment 'Primary Key'
-        primary key,
-    appointmentDate date         not null comment 'Appointment Date',
-    startTime       datetime     not null comment 'Start Time',
-    endTime         datetime     not null comment 'End Time',
-    student         varchar(255) not null comment 'Student ID',
-    teacher         varchar(255) not null comment 'Teacher ID',
-    note            text         null comment 'Note',
-    question        text         null comment 'Question',
-    refuseResult    text         null comment 'Refuse Result',
-    workSummary     text         null comment 'Work Summary',
-    state           int          not null comment 'State',
-    foreign key (student) references userinfo(id),
-    foreign key (teacher) references userinfo(id)
-)
-    comment 'Office Hour Event';
 
 create table role
 (
@@ -100,6 +81,15 @@ create table teacherclassification
 )
     comment 'Teacher Classification';
 
+create table userinfo
+(
+    id       varchar(255) not null comment 'Primary Key'
+        primary key,
+    email    varchar(255) not null comment 'Email',
+    username varchar(255) not null comment 'Username',
+    phone    varchar(255) not null comment 'Phone'
+);
+
 create table classroomevent
 (
     id              int auto_increment comment 'Primary Key'
@@ -107,14 +97,14 @@ create table classroomevent
     appointmentDate date                                          not null comment 'Appointment Date',
     startTime       datetime                                      not null comment 'Start Time',
     endTime         datetime                                      not null comment 'End Time',
-    applicant       varchar(255)                                  not null comment 'Applicant ID',
+    applicant       varchar(255) default ''                       not null comment 'Applicant ID',
     classroom       int                                           not null comment 'Classroom ID',
     isMedia         tinyint(1)                                    not null comment 'Is Media',
     isComputer      tinyint(1)                                    not null comment 'Is Computer',
     isSound         tinyint(1)                                    not null comment 'Is Sound',
     aim             enum ('会议', '研讨', '团建', '讲座', '其他') not null comment 'Aim',
     events          text                                          null comment 'Events',
-    approver        varchar(255)                                  null comment 'Approver ID',
+    approve         varchar(255)                                  null comment 'Approver ID',
     state           int                                           null comment 'State',
     constraint classroomevent_ibfk_1
         foreign key (classroom) references classroom (id),
@@ -127,7 +117,7 @@ create index applicant
     on classroomevent (applicant);
 
 create index approver
-    on classroomevent (approver);
+    on classroomevent (approve);
 
 create index classroom
     on classroomevent (classroom);
@@ -146,6 +136,33 @@ create table classroomeventpresent
 
 create index user_id
     on classroomeventpresent (user_id);
+
+create table officehourevent
+(
+    id              int auto_increment comment 'Primary Key'
+        primary key,
+    appointmentDate date         not null comment 'Appointment Date',
+    startTime       datetime     not null comment 'Start Time',
+    endTime         datetime     not null comment 'End Time',
+    student         varchar(255) not null comment 'Student ID',
+    teacher         varchar(255) not null comment 'Teacher ID',
+    note            text         null comment 'Note',
+    question        text         null comment 'Question',
+    refuseResult    text         null comment 'Refuse Result',
+    workSummary     text         null comment 'Work Summary',
+    state           int          not null comment 'State',
+    constraint officehourevent_ibfk_1
+        foreign key (student) references userinfo (id),
+    constraint officehourevent_ibfk_2
+        foreign key (teacher) references userinfo (id)
+)
+    comment 'Office Hour Event';
+
+create index student
+    on officehourevent (student);
+
+create index teacher
+    on officehourevent (teacher);
 
 create table officehoureventpresent
 (
@@ -180,13 +197,13 @@ create index teacherid
 
 create table userclassification
 (
-    classification int comment 'Classification',
+    classification int          not null comment 'Classification',
     user_id        varchar(255) not null comment 'User ID',
+    primary key (classification, user_id),
     constraint userclassification_ibfk_1
         foreign key (classification) references teacherclassification (id),
     constraint userclassification_ibfk_2
-        foreign key (user_id) references userinfo (id),
-    primary key (classification,user_id)
+        foreign key (user_id) references userinfo (id)
 )
     comment 'User Classification';
 

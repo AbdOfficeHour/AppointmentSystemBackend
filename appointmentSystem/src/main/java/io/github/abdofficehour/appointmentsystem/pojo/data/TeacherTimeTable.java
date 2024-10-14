@@ -16,4 +16,11 @@ public class TeacherTimeTable {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private String teacherId;
+
+    public TeacherTimeTable(LocalDate appointmentDate, LocalDateTime startTime, LocalDateTime endTime, String teacherId) {
+        this.appointmentDate = appointmentDate;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.teacherId = teacherId;
+    }
 }

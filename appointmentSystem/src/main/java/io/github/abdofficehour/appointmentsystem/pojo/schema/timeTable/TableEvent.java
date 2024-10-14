@@ -14,4 +14,5 @@ public class TableEvent {
     private LocalDate appointmentDate;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
+    private int state;
 }

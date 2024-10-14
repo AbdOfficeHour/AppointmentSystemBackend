@@ -9,7 +9,7 @@
     </resultMap>
 
     <select id="selectClassification" resultType="io.github.abdofficehour.appointmentsystem.pojo.schema.classroomClassification.ClassroomClassificationSchema">
-        select classroomclassification.name as classification, classroom.id as classroomId, classroom.classroom_name as classroomName from classroom
+        select classroomclassification.name as classification, classroom.id as classroomId, classroom.classroom_name as classroom from classroom
         left join classroomtoclassification on classroom.id = classroomtoclassification.classroom
         left join classroomclassification on classroomtoclassification.classification = classroomclassification.id
     </select>

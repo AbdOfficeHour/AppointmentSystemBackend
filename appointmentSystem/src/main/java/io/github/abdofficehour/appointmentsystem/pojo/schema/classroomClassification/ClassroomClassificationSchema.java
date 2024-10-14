@@ -9,6 +9,6 @@ import lombok.Setter;
 @Getter
 public class ClassroomClassificationSchema {
     private String classification;
-    private String classroomId;
-    private String classroomName;
+    private int classroomId;
+    private String classroom;
 }

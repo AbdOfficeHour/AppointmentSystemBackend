@@ -9,6 +9,9 @@ import io.github.abdofficehour.appointmentsystem.pojo.data.OfficeHourEvent;
 import io.github.abdofficehour.appointmentsystem.pojo.data.TeacherClassification;
 import io.github.abdofficehour.appointmentsystem.pojo.data.UserInfo;
 import io.github.abdofficehour.appointmentsystem.pojo.enumclass.Aim;
+import io.github.abdofficehour.appointmentsystem.pojo.schema.classroomData.ClassroomEventDisplay;
+import io.github.abdofficehour.appointmentsystem.pojo.schema.officehourData.OfficeHourEventDisplay;
+import io.github.abdofficehour.appointmentsystem.utils.TimeUtils;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,10 +20,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,15 +32,26 @@ public class AppointmentService {
     @Autowired
     UserInfoMapper userInfoMapper;
 
+    @Autowired
+    TimeUtils timeUtils;
+
     /**
      * 根据id,time查找OfficeHourEvents
      * @param id 对象
      * @return OfficeHourEvent对象
      */
-    public List<OfficeHourEvent> searchUserById(String id,int time){
-        List<OfficeHourEvent> officeHourEvent;
-        officeHourEvent = appointmentMapper.findEventsByIdAndTime(id, time);
-        return officeHourEvent;
+    public List<OfficeHourEventDisplay> searchUserById(String id,int time,Boolean if_approve){
+        List<OfficeHourEventDisplay> officeHourEvents;
+        int howManyMonth = 3;
+        if(time == 1)howManyMonth = 6;
+        else if(time == 2) howManyMonth = 12;
+
+        if(!if_approve)
+            officeHourEvents = appointmentMapper.findEventsByIdAndTime(id, howManyMonth);
+        else
+            officeHourEvents = appointmentMapper.findEventsByIdAndTimeApprove(id,howManyMonth);
+
+        return officeHourEvents;
     }
 
 
@@ -101,12 +112,9 @@ public class AppointmentService {
         Map<Long, Map<String, Object>> dateTimeMap = new HashMap<>();
 
         for (Map<String, Object> appointment : appointments) {
-            Instant appointmentDate = ((java.sql.Date) appointment.get("appointmentDate")).toLocalDate().atStartOfDay().toInstant(ZoneOffset.UTC);
-            long dateTimestamp = appointmentDate.getEpochSecond();
-            Instant startTime = ((java.sql.Timestamp) appointment.get("startTime")).toInstant();
-            Instant endTime = ((java.sql.Timestamp) appointment.get("endTime")).toInstant();
-            long startTimeTimestamp = startTime.getEpochSecond();
-            long endTimeTimestamp = endTime.getEpochSecond();
+            long dateTimestamp = timeUtils.toTimeStamp((java.sql.Date)appointment.get("appointmentDate"));
+            long startTimeTimestamp = timeUtils.toTimeStamp((LocalDateTime) appointment.get("startTime"));
+            long endTimeTimestamp = timeUtils.toTimeStamp((LocalDateTime) appointment.get("endTime"));
 
             Map<String, Object> dateMap = dateTimeMap.getOrDefault(dateTimestamp, new HashMap<>());
             dateMap.put("date", dateTimestamp);
@@ -130,9 +138,9 @@ public class AppointmentService {
             long startTimeTimestamp = ((Number) time.get("start_time")).longValue();
             long endTimeTimestamp = ((Number) time.get("end_time")).longValue();
 
-            LocalDate appointmentDate = Instant.ofEpochSecond(dateTimestamp).atZone(ZoneOffset.UTC).toLocalDate();
-            LocalDateTime startTime = Instant.ofEpochSecond(startTimeTimestamp).atZone(ZoneOffset.UTC).toLocalDateTime();
-            LocalDateTime endTime = Instant.ofEpochSecond(endTimeTimestamp).atZone(ZoneOffset.UTC).toLocalDateTime();
+            LocalDate appointmentDate = timeUtils.DateFromTimeStamp(dateTimestamp);
+            LocalDateTime startTime = timeUtils.DateTimeFromTimeStamp(startTimeTimestamp);
+            LocalDateTime endTime = timeUtils.DateTimeFromTimeStamp(endTimeTimestamp);
 
             OfficeHourEvent appointment = new OfficeHourEvent();
             appointment.setAppointmentDate(appointmentDate);
@@ -162,10 +170,23 @@ public class AppointmentService {
      * @param id 对象
      * @return classroomEvent对象
      */
-    public List<ClassroomEvent> searchClassRoomEventById(String id, int time){
-        List<ClassroomEvent> classroomeventEvent;
-        classroomeventEvent = appointmentMapper.findClassroomEventsByIdAndTime(id, time);
+    public List<ClassroomEventDisplay> searchClassRoomEventById(String id, int time){
+        List<ClassroomEventDisplay> classroomeventEvent;
+        int howManyMonth = 3;
+        if(time == 1)howManyMonth = 6;
+        else if(time == 2) howManyMonth = 12;
+
+        classroomeventEvent = appointmentMapper.findClassroomEventsByIdAndTime(id, howManyMonth);
         return classroomeventEvent;
+    }
+
+    public List<ClassroomEventDisplay> searchClassRoomEvent(String userId,int time){
+        List<ClassroomEventDisplay> classroomeventEvent;
+        int howManyMonth = 3;
+        if(time == 1)howManyMonth = 6;
+        else if(time == 2) howManyMonth = 12;
+
+        return appointmentMapper.findClassroomEvents(userId,time);
     }
 
     public List<String> searchClassroomById(int id){
@@ -181,12 +202,16 @@ public class AppointmentService {
         }
 
         // 检查当前用户是否有权限修改
-        if (!event.getApplicant().equals(userId)) {
-            return 101; // 权限错误
-        }
+//        if (!event.getApplicant().equals(userId)) {
+//            return 101; // 权限错误
+//        }
 
         // 更新事件信息
         if (updateData.containsKey("state")) {
+            if(event.getState() == 2){
+                // 设置审批人
+                event.setApprove(userId);
+            }
             event.setState((int) updateData.get("state"));
         }
 
@@ -196,19 +221,19 @@ public class AppointmentService {
         return 0; // 修改成功
     }
 
-    public List<Map<String, String>> getAvailableClassrooms() {
+    public List<Map<String, Object>> getAvailableClassrooms() {
         List<String> classroomIds = appointmentMapper.findAllClassroomIds();
         if (classroomIds.isEmpty()) {
             return null;
         }
-        List<Map<String, String>> classroomList = appointmentMapper.findClassroomsByIds(classroomIds);
+        List<Map<String, Object>> classroomList = appointmentMapper.findClassroomsByIds(classroomIds);
 
         // 将教师信息转换成List<Map<String, String>>的形式
         return classroomList.stream()
                 .map(classrooms -> {
-                    Map<String, String> map = new HashMap<>();
-                    map.put("classroomId", classrooms.get("teacherID"));
-                    map.put("classroom", classrooms.get("teacherName"));
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("classroomID", classrooms.get("id"));
+                    map.put("classroom", classrooms.get("classroom"));
                     return map;
                 })
                 .collect(Collectors.toList());
@@ -219,12 +244,9 @@ public class AppointmentService {
         Map<Long, Map<String, Object>> dateTimeMap = new HashMap<>();
 
         for (Map<String, Object> appointment : appointments) {
-            Instant appointmentDate = ((java.sql.Date) appointment.get("appointmentDate")).toLocalDate().atStartOfDay().toInstant(ZoneOffset.UTC);
-            long dateTimestamp = appointmentDate.getEpochSecond();
-            Instant startTime = ((java.sql.Timestamp) appointment.get("startTime")).toInstant();
-            Instant endTime = ((java.sql.Timestamp) appointment.get("endTime")).toInstant();
-            long startTimeTimestamp = startTime.getEpochSecond();
-            long endTimeTimestamp = endTime.getEpochSecond();
+            long dateTimestamp = timeUtils.toTimeStamp((java.sql.Date) appointment.get("appointmentDate"));
+            long startTimeTimestamp = timeUtils.toTimeStamp((LocalDateTime) appointment.get("startTime"));
+            long endTimeTimestamp = timeUtils.toTimeStamp((LocalDateTime) appointment.get("endTime"));
 
             Map<String, Object> dateMap = dateTimeMap.getOrDefault(dateTimestamp, new HashMap<>());
             dateMap.put("date", dateTimestamp);
@@ -242,27 +264,28 @@ public class AppointmentService {
         return new ArrayList<>(dateTimeMap.values());
     }
 
-    public boolean createClassroomEvent(String classroomName, Map<String, Object> time, boolean isMedia, boolean isComputer, boolean isSound, List<String> present, String aim, String events, int state) {
+    public boolean createClassroomEvent(String userId,int classroomId, Map<String, Object> time, boolean isMedia, boolean isComputer, boolean isSound, List<String> present, String aim, String events, int state) {
         try {
-            int classroomId = appointmentMapper.findClassroomIdByName(classroomName);
 
             long dateTimestamp = ((Number) time.get("date")).longValue();
             long startTimeTimestamp = ((Number) time.get("start_time")).longValue();
             long endTimeTimestamp = ((Number) time.get("end_time")).longValue();
 
-            LocalDate appointmentDate = Instant.ofEpochSecond(dateTimestamp).atZone(ZoneOffset.UTC).toLocalDate();
-            LocalDateTime startTime = Instant.ofEpochSecond(startTimeTimestamp).atZone(ZoneOffset.UTC).toLocalDateTime();
-            LocalDateTime endTime = Instant.ofEpochSecond(endTimeTimestamp).atZone(ZoneOffset.UTC).toLocalDateTime();
+            LocalDate appointmentDate =timeUtils.DateFromTimeStamp(dateTimestamp);
+            LocalDateTime startTime = timeUtils.DateTimeFromTimeStamp(startTimeTimestamp);
+            LocalDateTime endTime = timeUtils.DateTimeFromTimeStamp(endTimeTimestamp);
 
             ClassroomEvent classroomEvent = new ClassroomEvent();
             classroomEvent.setClassroom(classroomId);
             classroomEvent.setAppointmentDate(appointmentDate);
             classroomEvent.setStartTime(startTime);
             classroomEvent.setEndTime(endTime);
+            classroomEvent.setApplicant(userId);
             classroomEvent.setIsMedia(isMedia);
             classroomEvent.setIsComputer(isComputer);
             classroomEvent.setIsSound(isSound);
             classroomEvent.setAim(Aim.fromValue(aim));
+            classroomEvent.setApprove("");
             classroomEvent.setEvents(events);
             classroomEvent.setState(state);
 
@@ -275,6 +298,7 @@ public class AppointmentService {
 
             return true;
         } catch (Exception e) {
+            e.printStackTrace();
             return false;
         }
     }
