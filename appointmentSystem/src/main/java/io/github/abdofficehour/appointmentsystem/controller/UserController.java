@@ -41,8 +41,6 @@ public class UserController {
         Map<String,Object> map = new HashMap<>();
         map.put("userID",userInfo.getId());
         map.put("username",userInfo.getUsername());
-        map.put("email",userInfo.getEmail());
-        map.put("phone",userInfo.getPhone());
         map.put("userAuthority",userAuth);
 
 

@@ -4,9 +4,7 @@
 <mapper namespace="io.github.abdofficehour.appointmentsystem.mapper.UserInfoMapper">
     <resultMap id="UserInfoResult" type="io.github.abdofficehour.appointmentsystem.pojo.data.UserInfo">
         <id column="id" property="id"/>
-        <result column="email" property="email"/>
         <result column="username" property="username"/>
-        <result column="phone" property="phone"/>
     </resultMap>
 
     <select id="findAll" resultMap="UserInfoResult">
@@ -20,25 +18,25 @@
 
     <select id="searchRole" resultType="string">
         SELECT r.role_name FROM userinfo
-        LEFT JOIN officehour_db.userrole ON userrole.user_id = userinfo.id
-        LEFT JOIN officehour_db.role r on userrole.role_id = r.id
+        LEFT JOIN userrole ON userrole.user_id = userinfo.id
+        LEFT JOIN role r on userrole.role_id = r.id
         WHERE userinfo.id = #{id}
         
     </select>
     <select id="searchAuth" resultType="string">
         SELECT c.credit_name FROM userinfo
-        LEFT JOIN officehour_db.userrole ON userrole.user_id = userinfo.id
-        LEFT JOIN officehour_db.role r on userrole.role_id = r.id
-        LEFT JOIN officehour_db.rolecredit r2 on r.id = r2.role_id
-        LEFT JOIN officehour_db.credit c on r2.credit_id = c.id
+        LEFT JOIN userrole ON userrole.user_id = userinfo.id
+        LEFT JOIN role r on userrole.role_id = r.id
+        LEFT JOIN rolecredit r2 on r.id = r2.role_id
+        LEFT JOIN credit c on r2.credit_id = c.id
         WHERE userinfo.id = #{id}
 
     </select>
 
     <select id="selectAllByIdList" resultMap="UserInfoResult">
         SELECT * FROM userinfo
-        LEFT JOIN officehour_db.userrole ON userrole.user_id = userinfo.id
-        LEFT JOIN officehour_db.role r ON userrole.role_id = r.id
+        LEFT JOIN userrole ON userrole.user_id = userinfo.id
+        LEFT JOIN role r ON userrole.role_id = r.id
         <where>
             (userinfo.id LIKE #{searchData}
             OR
@@ -51,10 +49,10 @@
 
     <select id="selectAllClassification" resultType="io.github.abdofficehour.appointmentsystem.pojo.schema.teacherClassification.TeacherClassificationSchema">
         SELECT distinct t.name as classification,userinfo.id as teacherId, userinfo.username as teacherName FROM userinfo
-        LEFT JOIN officehour_db.userclassification ON userinfo.id = userclassification.user_id
-        LEFT JOIN officehour_db.teacherclassification t on t.id = userclassification.classification
-        LEFT JOIN officehour_db.userrole u on userinfo.id = u.user_id
-        RIGHT JOIN officehour_db.teachertimetable tt on tt.teacherid = userinfo.id
+        LEFT JOIN userclassification ON userinfo.id = userclassification.user_id
+        LEFT JOIN teacherclassification t on t.id = userclassification.classification
+        LEFT JOIN userrole u on userinfo.id = u.user_id
+        RIGHT JOIN teachertimetable tt on tt.teacherid = userinfo.id
         <where>
             u.role_id = 1
             and
