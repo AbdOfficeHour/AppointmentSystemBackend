@@ -3,9 +3,12 @@ spring:
     name: appointmentSystem
 
   datasource:
-    url: jdbc:mysql://localhost:3306/officehour_db?allowPublicKeyRetrieval=true&useSSL=false
-    username: abdn1
-    password: "@Abdn123456"
+#    url: jdbc:mysql://localhost:3306/officehour_db?allowPublicKeyRetrieval=true&useSSL=false
+#    username: abdn1
+#    password: "@Abdn123456"
+    url: jdbc:mysql://localhost:3306/appointment_system?allowPublicKeyRetrieval=true&useSSL=false
+    username: root
+    password: 123456
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   mvc:
