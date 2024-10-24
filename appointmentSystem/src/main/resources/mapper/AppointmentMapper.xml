@@ -67,7 +67,7 @@
     <select id="findAllTeacherIds" resultType="String">
         SELECT DISTINCT teacherid
         FROM teachertimetable
-        WHERE appointmentDate > CURRENT_DATE
+        WHERE appointmentDate >= CURRENT_DATE
     </select>
 
     <select id="findTeacherNamesByIds" resultType="Map">

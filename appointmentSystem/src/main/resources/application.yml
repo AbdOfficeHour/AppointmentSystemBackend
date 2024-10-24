@@ -26,7 +26,10 @@ server:
 
 custom:
   config:
-    main-app-url: http://sso.abdn.kirisame.cc/
+    # main-app-url: http://sso.abdn.kirisame.cc/
+    # token-url: api/token_verify/
+
+    main-app-url: http://localhost:3000/
     token-url: api/token_verify/
 
     date-len: 7
