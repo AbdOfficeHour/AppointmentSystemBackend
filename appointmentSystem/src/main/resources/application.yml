@@ -6,9 +6,9 @@ spring:
 #    url: jdbc:mysql://localhost:3306/officehour_db?allowPublicKeyRetrieval=true&useSSL=false
 #    username: abdn1
 #    password: "@Abdn123456"
-    url: jdbc:mysql://localhost:3306/appointment_system?allowPublicKeyRetrieval=true&useSSL=false
+    url: jdbc:mysql://localhost:3306/officehour_db?allowPublicKeyRetrieval=true&useSSL=false
     username: root
-    password: 123456
+    password: yu4uPs!wOJA&
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   mvc:
@@ -26,11 +26,14 @@ server:
 
 custom:
   config:
-    main-app-url: http://sso.abdn.kirisame.cc/
+    # main-app-url: http://sso.abdn.kirisame.cc/
+    # token-url: api/token_verify/
+
+    main-app-url: http://localhost:3000/
     token-url: api/token_verify/
 
-    date-len: 7
-    start-hour: 8
+    date-len: 7 #查询的时间跨度
+    start-hour: 8 #早上开始工作的时间
     start-miu: 0
-    end-hour: 20
+    end-hour: 20 #晚上结束的时间
     end-miu: 0

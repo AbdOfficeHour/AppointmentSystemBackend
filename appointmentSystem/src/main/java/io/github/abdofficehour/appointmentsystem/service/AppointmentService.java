@@ -1,25 +1,24 @@
 package io.github.abdofficehour.appointmentsystem.service;
 
 
+import io.github.abdofficehour.appointmentsystem.config.Properties;
 import io.github.abdofficehour.appointmentsystem.mapper.AppointmentMapper;
 import io.github.abdofficehour.appointmentsystem.mapper.OfficeHourEventMapper;
+import io.github.abdofficehour.appointmentsystem.mapper.TeacherTimeTableMapper;
 import io.github.abdofficehour.appointmentsystem.mapper.UserInfoMapper;
-import io.github.abdofficehour.appointmentsystem.pojo.data.ClassroomEvent;
-import io.github.abdofficehour.appointmentsystem.pojo.data.OfficeHourEvent;
-import io.github.abdofficehour.appointmentsystem.pojo.data.TeacherClassification;
-import io.github.abdofficehour.appointmentsystem.pojo.data.UserInfo;
+import io.github.abdofficehour.appointmentsystem.pojo.data.*;
 import io.github.abdofficehour.appointmentsystem.pojo.enumclass.Aim;
 import io.github.abdofficehour.appointmentsystem.pojo.schema.classroomData.ClassroomEventDisplay;
 import io.github.abdofficehour.appointmentsystem.pojo.schema.officehourData.OfficeHourEventDisplay;
+import io.github.abdofficehour.appointmentsystem.pojo.schema.timeTable.*;
+import io.github.abdofficehour.appointmentsystem.pojo.schema.timeTable.Period;
 import io.github.abdofficehour.appointmentsystem.utils.TimeUtils;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.sql.Date;
+import java.time.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -33,6 +32,15 @@ public class AppointmentService {
     UserInfoMapper userInfoMapper;
 
     @Autowired
+    private Properties properties;
+
+    @Autowired
+    private TeacherTimeTableMapper teacherTimeTableMapper;
+
+    @Autowired
+    private OfficeHourEventMapper officeHourEventMapper;
+
+    @Autowired
     TimeUtils timeUtils;
 
     /**
@@ -42,15 +50,17 @@ public class AppointmentService {
      */
     public List<OfficeHourEventDisplay> searchUserById(String id,int time,Boolean if_approve){
         List<OfficeHourEventDisplay> officeHourEvents;
-        int howManyMonth = 3;
+        int howManyMonth = 0;
         if(time == 1)howManyMonth = 6;
         else if(time == 2) howManyMonth = 12;
+        else if(time == 0) howManyMonth = 3;
 
         if(!if_approve)
+            //返回时间
             officeHourEvents = appointmentMapper.findEventsByIdAndTime(id, howManyMonth);
         else
-            officeHourEvents = appointmentMapper.findEventsByIdAndTimeApprove(id,howManyMonth);
-
+            //返回取消事件
+            officeHourEvents = appointmentMapper.findEventsByIdAndTimeApprove(id);
         return officeHourEvents;
     }
 
@@ -67,10 +77,10 @@ public class AppointmentService {
             return 102; // 事件不存在
         }
 
-        // 检查当前用户是否有权限修改
-        if (!event.getStudent().equals(userId) && !event.getTeacher().equals(userId)) {
-            return 101; // 权限错误
-        }
+        // 检查当前用户是否有权限修改,暂时不需要
+//        if (!event.getStudent().equals(userId) && !event.getTeacher().equals(userId)) {
+//            return 101; // 权限错误
+//        }
 
         // 更新事件信息
         if (updateData.containsKey("state")) {
@@ -107,29 +117,97 @@ public class AppointmentService {
                 .collect(Collectors.toList());
     }
 
-    public List<Map<String, Object>> getAppointmentsByTeacherId(String teacherId) {
-        List<Map<String, Object>> appointments = appointmentMapper.findAppointmentsByTeacherId(teacherId);
-        Map<Long, Map<String, Object>> dateTimeMap = new HashMap<>();
+    public List<SelectTimeTable> getAppointmentsByTeacherId(String teacherId) {
+        // 获取教师的名字
+        String name = userInfoMapper.selectById(teacherId).getUsername();
+        /*
+         * 从数据库读取所选教师的时间表
+         * 然后转化为officeHourTime字段
+         */
+        // 开始时间
+        LocalDate today = LocalDate.now();
+        // 结束时间
+        LocalDate todayAfterDayLen = LocalDate.now().plusDays(properties.getDateLen());
 
-        for (Map<String, Object> appointment : appointments) {
-            long dateTimestamp = timeUtils.toTimeStamp((java.sql.Date)appointment.get("appointmentDate"));
-            long startTimeTimestamp = timeUtils.toTimeStamp((LocalDateTime) appointment.get("startTime"));
-            long endTimeTimestamp = timeUtils.toTimeStamp((LocalDateTime) appointment.get("endTime"));
+        //查找officeHourTime
+        List<TeacherTimeTable> teacherTimeTables = teacherTimeTableMapper.selectTeacherTimeTable(teacherId,today,todayAfterDayLen);
+        // 将TeacherTimeTable转换为OfficeHourTime
+        List<SpecialTime> specialTimes =
+                teacherTimeTables.stream().map(teacherTimeTable ->
+                        new SpecialTime(
+                                timeUtils.toTimeStamp(teacherTimeTable.getAppointmentDate().atStartOfDay()),
+                                timeUtils.toTimeStamp(teacherTimeTable.getStartTime()),
+                                timeUtils.toTimeStamp(teacherTimeTable.getEndTime()))
+                ).toList();
 
-            Map<String, Object> dateMap = dateTimeMap.getOrDefault(dateTimestamp, new HashMap<>());
-            dateMap.put("date", dateTimestamp);
-            List<Map<String, Long>> times = (List<Map<String, Long>>) dateMap.getOrDefault("times", new ArrayList<>());
+        /*
+         *查找officehourevent，筛选出空余和可用
+         *转换timeTable的格式，用于表示教师的空闲和非空闲时间
+         */
+        // 读取教师的officehourevent
+        List<OfficeHourEvent> officeHourEvents = officeHourEventMapper.selectOfficeHourEventByTeacherIdAndForDayLen(teacherId, today, todayAfterDayLen);
+        // 获取配置文件中的工作时间
+        LocalTime defaultStartTime = LocalTime.of(properties.getStartHour(), properties.getStartMiu());
+        LocalTime defaultEndTime = LocalTime.of(properties.getEndHour(), properties.getEndMiu());
 
-            Map<String, Long> timePeriod = new HashMap<>();
-            timePeriod.put("startTime", startTimeTimestamp);
-            timePeriod.put("endTime", endTimeTimestamp);
-            times.add(timePeriod);
-            dateMap.put("times", times);
+        // 按日期对 officeHourEvents 进行分组，然后构建每个日期的 TimeTable
+        Map<LocalDate, List<SelectPeriod>> busyPeriodsByDate = officeHourEvents.stream()
+                .collect(Collectors.groupingBy(
+                        OfficeHourEvent::getAppointmentDate,
+                        Collectors.mapping(event -> new SelectPeriod(
+                                event.getStartTime().atZone(ZoneOffset.UTC).toInstant().toEpochMilli(),
+                                event.getEndTime().atZone(ZoneOffset.UTC).toInstant().toEpochMilli()
+                        ), Collectors.toList())
+                ));
+        // 创建 TimeTable 列表
+        List<SelectTimeTable> formatTimetable = new ArrayList<>();
+        // 遍历每一天，生成 TimeTable
+        for (LocalDate date = today; !date.isAfter(todayAfterDayLen); date = date.plusDays(1)) {
+            // 获取当天的繁忙时间段
+            List<SelectPeriod> busyPeriods = busyPeriodsByDate.getOrDefault(date, new ArrayList<>());
 
-            dateTimeMap.put(dateTimestamp, dateMap);
+            // 计算当天的工作时间段
+            long startOfDayTimestamp = date.atTime(defaultStartTime).toInstant(ZoneOffset.UTC).toEpochMilli();
+            long endOfDayTimestamp = date.atTime(defaultEndTime).toInstant(ZoneOffset.UTC).toEpochMilli();
+            List<SelectPeriod> availablePeriods = new ArrayList<>();
+            availablePeriods.add(new SelectPeriod(startOfDayTimestamp, endOfDayTimestamp));
+
+            // 减去繁忙时间段，得到最终的 available 时间段
+            for (SelectPeriod busy : busyPeriods) {
+                availablePeriods = subtractBusyTimeSegments(availablePeriods, busy);
+            }
+
+            // 创建 TimeTable 对象
+            SelectTimeTable timeTable = new SelectTimeTable();
+            timeTable.setDate(date.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli());
+            timeTable.setTimes(availablePeriods);
+
+            // 添加到格式化的时间表列表中
+            formatTimetable.add(timeTable);
         }
 
-        return new ArrayList<>(dateTimeMap.values());
+        return formatTimetable;
+    }
+
+    private List<SelectPeriod> subtractBusyTimeSegments(List<SelectPeriod> availablePeriods, SelectPeriod busy) {
+        List<SelectPeriod> result = new ArrayList<>();
+
+        for (SelectPeriod available : availablePeriods) {
+            // 如果 busy 不在 available 范围内
+            if (available.getEnd() <= busy.getStart() || available.getStart() >= busy.getEnd()) {
+                result.add(available);
+            } else {
+                // 部分重叠情况：分割 available
+                if (available.getStart() < busy.getStart()) {
+                    result.add(new SelectPeriod(available.getStart(), busy.getStart()));
+                }
+                if (available.getEnd() > busy.getEnd()) {
+                    result.add(new SelectPeriod(busy.getEnd(), available.getEnd()));
+                }
+            }
+        }
+
+        return result;
     }
 
     public boolean createAppointment(String student, String teacher, Map<String, Object> time, String note, String question, List<String> present) {
@@ -138,28 +216,39 @@ public class AppointmentService {
             long startTimeTimestamp = ((Number) time.get("start_time")).longValue();
             long endTimeTimestamp = ((Number) time.get("end_time")).longValue();
 
-            LocalDate appointmentDate = timeUtils.DateFromTimeStamp(dateTimestamp);
-            LocalDateTime startTime = timeUtils.DateTimeFromTimeStamp(startTimeTimestamp);
-            LocalDateTime endTime = timeUtils.DateTimeFromTimeStamp(endTimeTimestamp);
+            // 将日期转换为 LocalDate
+            LocalDate date = Instant.ofEpochSecond(dateTimestamp).atZone(ZoneId.systemDefault()).toLocalDate();
+
+            // 将 start_time 和 end_time 转换为 LocalTime
+            LocalTime startTime = Instant.ofEpochSecond(startTimeTimestamp).atZone(ZoneId.systemDefault()).toLocalTime();
+            LocalTime endTime = Instant.ofEpochSecond(endTimeTimestamp).atZone(ZoneId.systemDefault()).toLocalTime();
+
+            // 将 LocalDate 和 LocalTime 组合为 LocalDateTime
+            LocalDateTime startDateTime = LocalDateTime.of(date, startTime);
+            LocalDateTime endDateTime = LocalDateTime.of(date, endTime);
 
             OfficeHourEvent appointment = new OfficeHourEvent();
-            appointment.setAppointmentDate(appointmentDate);
-            appointment.setStartTime(startTime);
-            appointment.setEndTime(endTime);
+            appointment.setAppointmentDate(date);
+            appointment.setStartTime(startDateTime);
+            appointment.setEndTime(endDateTime);
             appointment.setStudent(student);
             appointment.setTeacher(teacher);
             appointment.setNote(note);
             appointment.setQuestion(question);
             appointment.setState(2);
 
-            appointmentMapper.insertAppointment(appointment);
+            List<OfficeHourEvent> conflictingEvents = appointmentMapper.checkTimeConflict(teacher, date, startDateTime, endDateTime);
+            if (!conflictingEvents.isEmpty()) {
+                return false;
+            } else {
+                appointmentMapper.insertAppointment(appointment);
 
-            int eventId = appointment.getId();
-            for (String studentId : present) {
-                appointmentMapper.insertOfficeHourEventPresent(eventId, studentId);
+                int eventId = appointment.getId();
+                for (String studentId : present) {
+                    appointmentMapper.insertOfficeHourEventPresent(eventId, studentId);
+                }
+                return true;
             }
-
-            return true;
         } catch (Exception e) {
             return false;
         }
@@ -244,7 +333,7 @@ public class AppointmentService {
         Map<Long, Map<String, Object>> dateTimeMap = new HashMap<>();
 
         for (Map<String, Object> appointment : appointments) {
-            long dateTimestamp = timeUtils.toTimeStamp((java.sql.Date) appointment.get("appointmentDate"));
+            long dateTimestamp = timeUtils.toTimeStamp((Date) appointment.get("appointmentDate"));
             long startTimeTimestamp = timeUtils.toTimeStamp((LocalDateTime) appointment.get("startTime"));
             long endTimeTimestamp = timeUtils.toTimeStamp((LocalDateTime) appointment.get("endTime"));
 

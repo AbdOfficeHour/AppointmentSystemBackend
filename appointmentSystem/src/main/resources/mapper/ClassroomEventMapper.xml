@@ -68,7 +68,22 @@
             appointmentDate &gt;= #{startDate}
             and
             appointmentDate &lt;= #{endDate}
+            and
+            classroomevent.state IN (0,2,3)
         </where>
+    </select>
+
+    <select id="selectClassroomEventByTeacherIdAndDate" resultMap="ClassroomEventResult">
+        SELECT * FROM classroomevent
+        <where>
+            classroomevent.classroom = #{classroom}
+            AND
+            classroomevent.appointmentDate = #{dayTime}
+            AND
+            classroomevent.state IN (2,3,4,5,6,7)
+        </where>
+        ORDER BY
+        classroomevent.appointmentDate ASC
     </select>
 
 </mapper>

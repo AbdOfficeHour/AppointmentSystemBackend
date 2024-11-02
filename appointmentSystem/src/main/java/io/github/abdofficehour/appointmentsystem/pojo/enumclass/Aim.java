@@ -8,6 +8,7 @@ public enum Aim {
     DISCUSS("研讨"),
     LEAGUE("团建"),
     LECTURE("讲座"),
+    BANNING("禁用"),
     OTHER("其他");
 
     private final String value;

@@ -10,6 +10,8 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -24,7 +26,7 @@ public interface AppointmentMapper {
      */
     List<OfficeHourEventDisplay> findEventsByIdAndTime(@Param("id") String id, @Param("time") int time);
 
-    List<OfficeHourEventDisplay> findEventsByIdAndTimeApprove(@Param("id") String id, @Param("time") int time);
+    List<OfficeHourEventDisplay> findEventsByIdAndTimeApprove(@Param("id") String id);
 
     List<String> findEventsById(int id);//这个是用于get时找同伙用的
 
@@ -36,9 +38,10 @@ public interface AppointmentMapper {
 
     List<Map<String, String>> findTeacherNamesByIds(@Param("ids") List<String> ids);
 
-    List<Map<String, Object>> findAppointmentsByTeacherId(@Param("teacherId") String teacherId);
 
     void insertAppointment(@Param("appointment") OfficeHourEvent appointment);
+
+    List<OfficeHourEvent> checkTimeConflict(@Param("teacherId") String teacherId,@Param("appointmentDate") LocalDate appointmentDate, @Param("startTime") LocalDateTime startTime, @Param("endTime") LocalDateTime endTime);
 
     void insertOfficeHourEventPresent(@Param("eventId") int eventId, @Param("studentId") String studentId);
 

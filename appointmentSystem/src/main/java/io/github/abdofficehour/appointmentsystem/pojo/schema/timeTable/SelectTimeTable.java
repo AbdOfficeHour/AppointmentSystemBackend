@@ -1,0 +1,18 @@
+package io.github.abdofficehour.appointmentsystem.pojo.schema.timeTable;
+
+import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.util.List;
+/**
+ * 这个类用于表示TableInfo/officehour接口
+ * 中的timeTable字段
+ */
+@Data
+@Setter
+@Getter
+public class SelectTimeTable {
+    private long date;
+    private List<SelectPeriod> times;
+}

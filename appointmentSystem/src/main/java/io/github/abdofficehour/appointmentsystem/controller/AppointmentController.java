@@ -7,6 +7,7 @@ import io.github.abdofficehour.appointmentsystem.pojo.data.TeacherBanTime;
 import io.github.abdofficehour.appointmentsystem.pojo.data.UserInfo;
 import io.github.abdofficehour.appointmentsystem.pojo.schema.classroomData.ClassroomEventDisplay;
 import io.github.abdofficehour.appointmentsystem.pojo.schema.officehourData.OfficeHourEventDisplay;
+import io.github.abdofficehour.appointmentsystem.pojo.schema.timeTable.SelectTimeTable;
 import io.github.abdofficehour.appointmentsystem.service.AppointmentService;
 import io.github.abdofficehour.appointmentsystem.service.UserInfoService;
 import io.github.abdofficehour.appointmentsystem.utils.TimeUtils;
@@ -30,7 +31,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1.1/Appointment")
 @Tag(name = "预约事件相关接口")
-//-------------------ymz倾情编写，返工找我就行QAQ---------------------//
 public class AppointmentController {
 
     @Autowired
@@ -50,44 +50,51 @@ public class AppointmentController {
     @Transactional
     @GetMapping("/list/officehour")
     public ResponseMap getOfficeHourEvents(@RequestParam("time") int time,HttpServletRequest request) {
+        try {
+            // 返回的数据
+            List<OfficeHourEventDisplay> eventList;
+            List<Map> resultList = new ArrayList<>();
 
-        // 返回的数据
-        List<OfficeHourEventDisplay> eventList;
-        List<Map> resultList = new ArrayList<>();
+            //去数据库找到这个人的id是
+            UserInfo userInfo = (UserInfo) request.getAttribute("userinfo");
+            String id = userInfo.getId();
 
-        //去数据库找到这个人的id是
-        UserInfo userInfo = (UserInfo) request.getAttribute("userinfo");
-        String id = userInfo.getId();
-
-        eventList = appointmentService.searchUserById(id,time,false);
-        if (eventList == null) return new ResponseMap(0, "获取成功", eventList);
-        for (OfficeHourEventDisplay result : eventList){
-            Map<String,Object> map = new HashMap<>();
-            Map<String,Object> timePeriod = new HashMap<>();
-            timePeriod.put("date",timeUtils.toTimeStamp(result.getAppointmentDate()));
-            timePeriod.put("startTime",timeUtils.toTimeStamp(result.getStartTime()));
-            timePeriod.put("endTime",timeUtils.toTimeStamp(result.getEndTime()));
-
-            List<String> partnerIdList = appointmentService.searchById(result.getId());
-            List<String> partnerList = new ArrayList<>();
-            for (String partner : partnerIdList){
-                String partnerName = userInfoService.searchUserById(partner).getUsername();
-                partnerList.add(partnerName);
+            if (time == 0){
+                eventList = appointmentService.searchUserById(id,time,true);
+            }else {
+                eventList = appointmentService.searchUserById(id,time,false);
             }
+            if (eventList == null) return new ResponseMap(0, "获取成功", eventList);
+            for (OfficeHourEventDisplay result : eventList){
+                Map<String,Object> map = new HashMap<>();
+                Map<String,Object> timePeriod = new HashMap<>();
+                timePeriod.put("date",timeUtils.toTimeStamp(result.getAppointmentDate()));
+                timePeriod.put("startTime",timeUtils.toTimeStamp(result.getStartTime()));
+                timePeriod.put("endTime",timeUtils.toTimeStamp(result.getEndTime()));
 
-            map.put("id",result.getId());
-            map.put("student_name",userInfo.getUsername());
-            map.put("teacher_name",result.getTeacherName());
-            map.put("time",timePeriod);
-            map.put("note",result.getNote());
-            map.put("question",result.getQuestion());
-            map.put("present",partnerList);
-            map.put("state",result.getState());
-            map.put("refuse_result",result.getRefuseResult());
-            map.put("work_summary",result.getWorkSummary());
-            resultList.add(map);
+                List<String> partnerIdList = appointmentService.searchById(result.getId());
+                List<String> partnerList = new ArrayList<>();
+                for (String partner : partnerIdList){
+                    String partnerName = userInfoService.searchUserById(partner).getUsername();
+                    partnerList.add(partnerName);
+                }
+
+                map.put("id",result.getId());
+                map.put("student_name",result.getStudentName());
+                map.put("teacher_name",result.getTeacherName());
+                map.put("time",timePeriod);
+                map.put("note",result.getNote());
+                map.put("question",result.getQuestion());
+                map.put("present",partnerList);
+                map.put("state",result.getState());
+                map.put("refuse_result",result.getRefuseResult());
+                map.put("work_summary",result.getWorkSummary());
+                resultList.add(map);
+            }
+            return new ResponseMap(0, "获取成功", resultList);
+        } catch (Exception ignored){
+            return new ResponseMap(1, "获取失败", null);
         }
-        return new ResponseMap(0, "获取成功", resultList);
     }
 
     @Operation(summary = "返回教师自己几个月内的Officehour预约信息")
@@ -160,7 +167,7 @@ public class AppointmentController {
                 return new ResponseMap(102, "其他修改错误", null);
             }
         } catch (Exception e) {
-            return new ResponseMap(102, "其他修改错误", null);
+            return new ResponseMap(102, "其他修改错误", e.getMessage());
         }
     }
 
@@ -172,10 +179,15 @@ public class AppointmentController {
     @Transactional
     @GetMapping("/list/officehour/pickerList")
     public ResponseMap getAvailableTeachers() {
-        List<Map<String, String>> teachers = appointmentService.getAvailableTeachers();
-        Map<String, List<Map<String, String>>> data = new HashMap<>();
-        data.put("teachers", teachers);
-        return new ResponseMap(0, "获取成功", data);
+        try{
+            List<Map<String, String>> teachers = appointmentService.getAvailableTeachers();
+            Map<String, List<Map<String, String>>> data = new HashMap<>();
+            data.put("teachers", teachers);
+            return new ResponseMap(0, "获取成功", data);
+        }catch (Exception e){
+            return new ResponseMap(1,"获取失败",e.getMessage());
+        }
+
     }
 
     @Operation(summary = "获取OfficeHour可选老师の可选时间段")
@@ -186,10 +198,15 @@ public class AppointmentController {
     @Transactional
     @GetMapping("/list/officehour/pickerTime/{teacherId}")
     public ResponseMap getAvailableTimes(@PathVariable("teacherId") String teacherId) {
-        List<Map<String, Object>> dateTimeList = appointmentService.getAppointmentsByTeacherId(teacherId);
-        Map<String, List<Map<String, Object>>> data = new HashMap<>();
-        data.put("dateTime", dateTimeList);
-        return new ResponseMap(0, "获取成功", data);
+        try{
+            List<SelectTimeTable> dateTimeList = appointmentService.getAppointmentsByTeacherId(teacherId);
+            Map<String, List<SelectTimeTable>> data = new HashMap<>();
+            data.put("dateTime", dateTimeList);
+            return new ResponseMap(0, "获取成功", data);
+        } catch (Exception e){
+            return new ResponseMap(1, "获取失败", e.getMessage());
+        }
+
     }
 
     @Operation(summary = "学生添加预约，state变为1")// todo 是应该变为1吗
@@ -200,21 +217,25 @@ public class AppointmentController {
     @Transactional
     @PostMapping("/list/officehour")
     public ResponseMap createAppointment(@RequestBody Map<String, Object> requestBody, HttpServletRequest request) {
-        String teacher = (String) requestBody.get("teacher");
-        Map<String, Object> time = (Map<String, Object>) requestBody.get("time");
-        String note = (String) requestBody.get("note");
-        String question = (String) requestBody.get("question");
-        List<String> present = (List<String>) requestBody.get("present");
+        try{
+            String teacher = (String) requestBody.get("teacher");
+            Map<String, Object> time = (Map<String, Object>) requestBody.get("time");
+            String note = (String) requestBody.get("note");
+            String question = (String) requestBody.get("question");
+            List<String> present = (List<String>) requestBody.get("present");
 
-        // 从 request 中获取学生信息
-        String student = ((UserInfo) request.getAttribute("userinfo")).getId();
+            // 从 request 中获取学生信息
+            String student = ((UserInfo) request.getAttribute("userinfo")).getId();
 
-        boolean success = appointmentService.createAppointment(student, teacher, time, note, question, present);
+            boolean success = appointmentService.createAppointment(student, teacher, time, note, question, present);
 
-        if (success) {
-            return new ResponseMap(0, "预约成功", null);
-        } else {
-            return new ResponseMap(101, "预约失败", null);
+            if (success) {
+                return new ResponseMap(0, "预约成功", null);
+            } else {
+                return new ResponseMap(101, "预约失败", null);
+            }
+        }catch (Exception e){
+            return new ResponseMap(101, "其他失败", null);
         }
     }
 

@@ -13,4 +13,6 @@ public interface OfficeHourEventMapper {
     void insertBatch(List<OfficeHourEvent> officeHourEvents);
 
     List<OfficeHourEvent> selectOfficeHourEventByTeacherIdAndForDayLen(String teacherId, LocalDate startTime, LocalDate endTime);
+
+    List<OfficeHourEvent> selectOfficeHourEventByTeacherIdAndDate(String teacherId, LocalDate dayTime);
 }

@@ -1,5 +1,4 @@
 package io.github.abdofficehour.appointmentsystem.pojo.schema.timeTable;
-
 import lombok.*;
 
 /**
@@ -10,12 +9,11 @@ import lombok.*;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class Period {
+public class SelectPeriod {
     private Long start;
     private Long end;
-    public Period(long start, long end) {
+    public SelectPeriod(long start, long end) {
         this.start = start;
         this.end = end;
     }
 }
-

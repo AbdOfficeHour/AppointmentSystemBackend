@@ -49,6 +49,21 @@
              officehourevent.appointmentDate &lt; #{endTime}
              AND
              officehourevent.appointmentDate &gt;= #{startTime}
+             AND
+             officehourevent.state IN (0, 2, 3)
+        </where>
+        ORDER BY
+        officehourevent.appointmentDate ASC
+    </select>
+
+    <select id="selectOfficeHourEventByTeacherIdAndDate" resultMap="UserInfoResult">
+        SELECT * FROM officehourevent
+        <where>
+            officehourevent.teacher = #{teacherId}
+            AND
+            officehourevent.appointmentDate = #{dayTime}
+            AND
+            officehourevent.state IN (2,3,4,5,6,7)
         </where>
         ORDER BY
         officehourevent.appointmentDate ASC

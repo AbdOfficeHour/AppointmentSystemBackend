@@ -49,11 +49,13 @@ app.post('/register', (req, res) => {
 
 });
 
-app.post('/login', (req, res) => {
+app.post('/api/token_obtain', (req, res) => {
     try {
-        const {id, pass} = req.body;
+        const {username, password} = req.body;
+        id = username
+        pass = password
         if (!id || !pass) {
-            res.status(500)
+            res.status(500).send()
             return;
         }
         for (const u of users) {
@@ -62,7 +64,7 @@ app.post('/login', (req, res) => {
                 res
                     .status(200)
                     .json({
-                        token: jwt.sign({id: u.id}, secretKey, {expiresIn: '24h'})
+                        token: jwt.sign({username: u.id}, secretKey, {expiresIn: '24h'})
                     });
                 return;
             }

@@ -15,11 +15,14 @@
             o.refuseResult as refuseResult,
             o.workSummary as workSummary,
             o.state as state,
-            u.username as teacherName
+            studentInfo.username as studentName,
+            teacherInfo.username as teacherName
         from officehourevent o
-        left join userinfo u on o.teacher = u.id
-        WHERE (student = #{id} OR teacher = #{id})
+                 left join userinfo studentInfo on o.student = studentInfo.id
+                 left join userinfo teacherInfo on o.teacher = teacherInfo.id
+        WHERE (o.student = #{id} OR o.teacher = #{id})
           AND o.appointmentDate >= DATE_SUB(CURRENT_DATE, INTERVAL #{time} MONTH)
+          AND o.state IN (2,3,4,5,7)
         order by o.appointmentDate desc
     </select>
 
@@ -36,11 +39,13 @@
             o.refuseResult as refuseResult,
             o.workSummary as workSummary,
             o.state as state,
-            u.username as studentName
+            studentInfo.username as studentName,
+            teacherInfo.username as teacherName
         from officehourevent o
-                 left join userinfo u on o.student = u.id
+                 left join userinfo studentInfo on o.student = studentInfo.id
+                 left join userinfo teacherInfo on o.teacher = teacherInfo.id
         WHERE (student = #{id} OR teacher = #{id})
-          AND o.appointmentDate >= DATE_SUB(CURRENT_DATE, INTERVAL #{time} MONTH)
+          AND o.state IN (6)
         order by o.appointmentDate desc
     </select>
 
@@ -67,7 +72,7 @@
     <select id="findAllTeacherIds" resultType="String">
         SELECT DISTINCT teacherid
         FROM teachertimetable
-        WHERE appointmentDate > CURRENT_DATE
+        WHERE appointmentDate >= CURRENT_DATE
     </select>
 
     <select id="findTeacherNamesByIds" resultType="Map">
@@ -79,12 +84,6 @@
         </foreach>
     </select>
 
-    <select id="findAppointmentsByTeacherId" resultType="Map">
-        SELECT appointmentDate, startTime, endTime
-        FROM teachertimetable
-        WHERE teacherID = #{teacherId}
-          AND appointmentDate >= CURRENT_DATE
-    </select>
 
     <insert id="insertAppointment" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO officehourevent (appointmentDate, startTime, endTime, student, teacher, note, question, state)
@@ -98,6 +97,17 @@
                 #{appointment.question},
                 2)
     </insert>
+
+    <select id="checkTimeConflict" resultType="io.github.abdofficehour.appointmentsystem.pojo.data.OfficeHourEvent">
+        SELECT *
+        FROM officehourevent
+        WHERE teacher = #{teacherId}
+          AND appointmentDate = #{appointmentDate}
+          AND (
+            (startTime &lt; #{endTime} AND endTime &gt; #{startTime})
+            )
+    </select>
+
 
     <!-- 插入参与成员记录 -->
     <insert id="insertOfficeHourEventPresent">

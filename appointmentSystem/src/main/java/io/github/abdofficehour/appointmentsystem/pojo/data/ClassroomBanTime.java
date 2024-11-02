@@ -7,8 +7,9 @@ import lombok.Setter;
 @Data
 @Setter
 @Getter
-public class UserInfo {
-    private String id;
-    private String username;
-    private String email;
+public class ClassroomBanTime {
+    private int startDate;
+    private int endDate;
+    private int startTime;
+    private int endTime;
 }
