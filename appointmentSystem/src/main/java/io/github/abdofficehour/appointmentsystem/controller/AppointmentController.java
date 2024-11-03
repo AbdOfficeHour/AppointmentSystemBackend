@@ -250,48 +250,55 @@ public class AppointmentController {
     @Transactional
     @GetMapping("/list/classroom")
     public ResponseMap getClassRoomEvents(@RequestParam("time") int time,HttpServletRequest request) {
+        try {
+            // 返回的数据
+            List<ClassroomEventDisplay> eventList;
+            List<Map<String,Object>> resultList = new ArrayList<>();
 
-        // 返回的数据
-        List<ClassroomEventDisplay> eventList;
-        List<Map<String,Object>> resultList = new ArrayList<>();
+            //去数据库找到这个人的id是
+            UserInfo userInfo = (UserInfo) request.getAttribute("userinfo");
+            String id = userInfo.getId();
 
-        //去数据库找到这个人的id是
-        UserInfo userInfo = (UserInfo) request.getAttribute("userinfo");
-        String id = userInfo.getId();
-
-        eventList = appointmentService.searchClassRoomEventById(id,time);
-        if (eventList == null) return new ResponseMap(0, "获取成功", eventList);
-
-        for (ClassroomEventDisplay result : eventList){
-            List<String> partnerIdList;
-            List<String> partnerList = new ArrayList<>();
-            Map<String,Object> map = new HashMap<>();
-
-            Map<String,Object> timePeriod = new HashMap<>();
-            timePeriod.put("date",timeUtils.toTimeStamp(result.getAppointmentDate()));
-            timePeriod.put("startTime",timeUtils.toTimeStamp(result.getStartTime()));
-            timePeriod.put("endTime",timeUtils.toTimeStamp(result.getEndTime()));
-
-            partnerIdList = appointmentService.searchClassroomById(result.getId());
-            for (String partner : partnerIdList){
-                String partnerName = userInfoService.searchUserById(partner).getUsername();
-                partnerList.add(partnerName);
+            if (time == 0){
+                eventList = appointmentService.searchClassRoomEventById(id,time,true);
+            }else {
+                eventList = appointmentService.searchClassRoomEventById(id,time,false);
             }
+            if (eventList == null) return new ResponseMap(0, "获取成功", eventList);
 
-            map.put("id",result.getId());
-            map.put("applicant",userInfo.getUsername());
-            map.put("classroom",result.getClassroomName());
-            map.put("time",timePeriod);
-            map.put("isMedia",result.getIsMedia());
-            map.put("isComputer",result.getIsComputer());
-            map.put("isSound",result.getIsSound());
-            map.put("present",partnerList);
-            map.put("aim",result.getAim().getValue());
-            map.put("events",result.getEvents());
-            map.put("state",result.getState());
-            resultList.add(map);
+            for (ClassroomEventDisplay result : eventList){
+                List<String> partnerIdList;
+                List<String> partnerList = new ArrayList<>();
+                Map<String,Object> map = new HashMap<>();
+
+                Map<String,Object> timePeriod = new HashMap<>();
+                timePeriod.put("date",timeUtils.toTimeStamp(result.getAppointmentDate()));
+                timePeriod.put("startTime",timeUtils.toTimeStamp(result.getStartTime()));
+                timePeriod.put("endTime",timeUtils.toTimeStamp(result.getEndTime()));
+
+                partnerIdList = appointmentService.searchClassroomById(result.getId());
+                for (String partner : partnerIdList){
+                    String partnerName = userInfoService.searchUserById(partner).getUsername();
+                    partnerList.add(partnerName);
+                }
+
+                map.put("id",result.getId());
+                map.put("applicant",result.getApplicant());
+                map.put("classroom",result.getClassroomName());
+                map.put("time",timePeriod);
+                map.put("isMedia",result.getIsMedia());
+                map.put("isComputer",result.getIsComputer());
+                map.put("isSound",result.getIsSound());
+                map.put("present",partnerList);
+                map.put("aim",result.getAim().getValue());
+                map.put("events",result.getEvents());
+                map.put("state",result.getState());
+                resultList.add(map);
+            }
+            return new ResponseMap(0, "获取成功", resultList);
+        }catch (Exception e){
+            return new ResponseMap(1, "获取失败", e.getMessage());
         }
-        return new ResponseMap(0, "获取成功", resultList);
     }
 
     @Operation(summary = "返回审批人员自己几个月内classroom预约信息")
@@ -380,10 +387,14 @@ public class AppointmentController {
     @Transactional
     @GetMapping("/list/classroom/pickerList")
     public ResponseMap getAvailableClassrooms() {
-        List<Map<String, Object>> classrooms = appointmentService.getAvailableClassrooms();
-        Map<String, List<Map<String, Object>>> data = new HashMap<>();
-        data.put("classrooms", classrooms);
-        return new ResponseMap(0, "获取成功", data);
+        try{
+            List<Map<String, Object>> classrooms = appointmentService.getAvailableClassrooms();
+            Map<String, List<Map<String, Object>>> data = new HashMap<>();
+            data.put("classrooms", classrooms);
+            return new ResponseMap(0, "获取成功", data);
+        }catch (Exception e){
+            return new ResponseMap(1,"获取失败",e.getMessage());
+        }
     }
 
     @Operation(summary = "获取可选Classroomの可选时间段")
@@ -393,11 +404,16 @@ public class AppointmentController {
     })
     @Transactional
     @GetMapping("/list/classroom/pickerTime/{classroom}")
-    public ResponseMap getClassroomAvailableTimes(@PathVariable("classroom") String classroom) {
-        List<Map<String, Object>> dateTimeList = appointmentService.getAppointmentsByClassroomId(classroom);
-        Map<String, List<Map<String, Object>>> data = new HashMap<>();
-        data.put("dateTime", dateTimeList);
-        return new ResponseMap(0, "获取成功", data);
+    public ResponseMap getClassroomAvailableTimes(@PathVariable("classroom") int classroom) {
+        try {
+            List<SelectTimeTable> dateTimeList = appointmentService.getAppointmentsByClassroomId(classroom);
+            Map<String, List<SelectTimeTable>> data = new HashMap<>();
+            data.put("dateTime", dateTimeList);
+            return new ResponseMap(0, "获取成功", data);
+        }catch (Exception e){
+            return new ResponseMap(1, "获取失败", e.getMessage());
+        }
+
     }
 
     @Operation(summary = "用户添加Classroom预约，state变为1")
@@ -408,25 +424,29 @@ public class AppointmentController {
     @Transactional
     @PostMapping("/list/classroom")
     public ResponseMap createClassroomEvent(@RequestBody Map<String, Object> requestBody,HttpServletRequest request) {
-        // 从 request 中获取用户信息
-        UserInfo userinfo = ((UserInfo) request.getAttribute("userinfo"));
+        try {
+            // 从 request 中获取用户信息
+            UserInfo userinfo = ((UserInfo) request.getAttribute("userinfo"));
 
-        int classroomId = (int) requestBody.get("classroom");
-        Map<String, Object> time = (Map<String, Object>) requestBody.get("time");
-        boolean isMedia = (Boolean) requestBody.get("isMedia");
-        boolean isComputer = (Boolean) requestBody.get("isComputer");
-        boolean isSound = (Boolean) requestBody.get("isSound");
-        List<String> present = (List<String>) requestBody.get("present");
-        String aim = (String) requestBody.get("aim");
-        String events = (String) requestBody.get("events");
-        int state = (Integer) requestBody.get("state");
+            int classroomId = (int) requestBody.get("classroom");
+            Map<String, Object> time = (Map<String, Object>) requestBody.get("time");
+            boolean isMedia = (Boolean) requestBody.get("isMedia");
+            boolean isComputer = (Boolean) requestBody.get("isComputer");
+            boolean isSound = (Boolean) requestBody.get("isSound");
+            List<String> present = (List<String>) requestBody.get("present");
+            String aim = (String) requestBody.get("aim");
+            String events = (String) requestBody.get("events");
+            int state = (Integer) requestBody.get("state");
 
-        boolean success = appointmentService.createClassroomEvent(userinfo.getId(),classroomId, time, isMedia, isComputer, isSound, present, aim, events, state);
+            boolean success = appointmentService.createClassroomEvent(userinfo.getId(),classroomId, time, isMedia, isComputer, isSound, present, aim, events, state);
 
-        if (success) {
-            return new ResponseMap(0, "预约成功", null);
-        } else {
-            return new ResponseMap(101, "预约失败", null);
+            if (success) {
+                return new ResponseMap(0, "预约成功", null);
+            } else {
+                return new ResponseMap(101, "预约失败", null);
+            }
+        }catch (Exception e){
+            return new ResponseMap(101, "其他失败", null);
         }
     }
 }

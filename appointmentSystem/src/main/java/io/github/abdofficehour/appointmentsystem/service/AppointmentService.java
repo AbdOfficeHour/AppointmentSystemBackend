@@ -2,10 +2,7 @@ package io.github.abdofficehour.appointmentsystem.service;
 
 
 import io.github.abdofficehour.appointmentsystem.config.Properties;
-import io.github.abdofficehour.appointmentsystem.mapper.AppointmentMapper;
-import io.github.abdofficehour.appointmentsystem.mapper.OfficeHourEventMapper;
-import io.github.abdofficehour.appointmentsystem.mapper.TeacherTimeTableMapper;
-import io.github.abdofficehour.appointmentsystem.mapper.UserInfoMapper;
+import io.github.abdofficehour.appointmentsystem.mapper.*;
 import io.github.abdofficehour.appointmentsystem.pojo.data.*;
 import io.github.abdofficehour.appointmentsystem.pojo.enumclass.Aim;
 import io.github.abdofficehour.appointmentsystem.pojo.schema.classroomData.ClassroomEventDisplay;
@@ -39,6 +36,12 @@ public class AppointmentService {
 
     @Autowired
     private OfficeHourEventMapper officeHourEventMapper;
+
+    @Autowired
+    private ClassroomEventMapper  classroomEventMapper;
+
+    @Autowired
+    private ClassroomTimeTableMapper  classroomTimeTableMapper;
 
     @Autowired
     TimeUtils timeUtils;
@@ -194,15 +197,15 @@ public class AppointmentService {
 
         for (SelectPeriod available : availablePeriods) {
             // 如果 busy 不在 available 范围内
-            if (available.getEnd() <= busy.getStart() || available.getStart() >= busy.getEnd()) {
+            if (available.getEndTime() <= busy.getStartTime() || available.getStartTime() >= busy.getEndTime()) {
                 result.add(available);
             } else {
                 // 部分重叠情况：分割 available
-                if (available.getStart() < busy.getStart()) {
-                    result.add(new SelectPeriod(available.getStart(), busy.getStart()));
+                if (available.getStartTime() < busy.getStartTime()) {
+                    result.add(new SelectPeriod(available.getStartTime(), busy.getStartTime()));
                 }
-                if (available.getEnd() > busy.getEnd()) {
-                    result.add(new SelectPeriod(busy.getEnd(), available.getEnd()));
+                if (available.getEndTime() > busy.getEndTime()) {
+                    result.add(new SelectPeriod(busy.getEndTime(), available.getEndTime()));
                 }
             }
         }
@@ -259,13 +262,19 @@ public class AppointmentService {
      * @param id 对象
      * @return classroomEvent对象
      */
-    public List<ClassroomEventDisplay> searchClassRoomEventById(String id, int time){
+    public List<ClassroomEventDisplay> searchClassRoomEventById(String id, int time,Boolean if_approve){
         List<ClassroomEventDisplay> classroomeventEvent;
-        int howManyMonth = 3;
+        int howManyMonth = 0;
         if(time == 1)howManyMonth = 6;
         else if(time == 2) howManyMonth = 12;
+        else if(time == 0) howManyMonth = 3;
 
-        classroomeventEvent = appointmentMapper.findClassroomEventsByIdAndTime(id, howManyMonth);
+        if(!if_approve)
+            //返回时间
+            classroomeventEvent = appointmentMapper.findClassroomEventsByIdAndTime(id, howManyMonth);
+        else
+            //返回取消事件
+            classroomeventEvent = appointmentMapper.findClassroomEventsByIdAndTimeApprove(id);
         return classroomeventEvent;
     }
 
@@ -328,30 +337,75 @@ public class AppointmentService {
                 .collect(Collectors.toList());
     }
 
-    public List<Map<String, Object>> getAppointmentsByClassroomId(String classroomId) {
-        List<Map<String, Object>> appointments = appointmentMapper.findAppointmentsByClassroomId(classroomId);
-        Map<Long, Map<String, Object>> dateTimeMap = new HashMap<>();
+    public List<SelectTimeTable> getAppointmentsByClassroomId(int classroomId) {
+        //开始时间
+        LocalDate today = LocalDate.now();
+        // 结束时间
+        LocalDate todayAfterDayLen = LocalDate.now().plusDays(properties.getDateLen());
 
-        for (Map<String, Object> appointment : appointments) {
-            long dateTimestamp = timeUtils.toTimeStamp((Date) appointment.get("appointmentDate"));
-            long startTimeTimestamp = timeUtils.toTimeStamp((LocalDateTime) appointment.get("startTime"));
-            long endTimeTimestamp = timeUtils.toTimeStamp((LocalDateTime) appointment.get("endTime"));
+        List<io.github.abdofficehour.appointmentsystem.pojo.data.ClassroomTimeTable> classroomTimeTableList = classroomTimeTableMapper.selectTimeTableByTime(classroomId,today,todayAfterDayLen);
+        // 将classroomTimeTable转换为SpecialTime
+        List<SpecialTime> specialTimes =
+                classroomTimeTableList.stream().map(classroomTimeTable ->
+                        new SpecialTime(
+                                timeUtils.toTimeStamp(classroomTimeTable.getAppointmentDate().atStartOfDay()),
+                                timeUtils.toTimeStamp(classroomTimeTable.getStartTime()),
+                                timeUtils.toTimeStamp(classroomTimeTable.getEndTime()))
+                ).toList();
 
-            Map<String, Object> dateMap = dateTimeMap.getOrDefault(dateTimestamp, new HashMap<>());
-            dateMap.put("date", dateTimestamp);
-            List<Map<String, Long>> times = (List<Map<String, Long>>) dateMap.getOrDefault("times", new ArrayList<>());
+        // 获取配置文件中的默认工作时间
+        LocalTime defaultStartTime = LocalTime.of(properties.getStartHour(), properties.getStartMiu());
+        LocalTime defaultEndTime = LocalTime.of(properties.getEndHour(), properties.getEndMiu());
+        // 读取 ClassroomEvent 数据，获取指定日期范围内的事件
+        List<ClassroomEvent> classroomEvents = classroomEventMapper.selectByIdAndTime(classroomId, today, todayAfterDayLen);
+        // 将 classroomEvents 转换为 List<TableEvent>，表示 busy 时间段
+        List<TableEvent> busyEvents = classroomEvents
+                .stream()
+                .map(classroomEvent -> new TableEvent(
+                        classroomEvent.getAppointmentDate(),
+                        classroomEvent.getStartTime(),
+                        classroomEvent.getEndTime(),
+                        classroomEvent.getState()
+                ))
+                .toList();
 
-            Map<String, Long> timePeriod = new HashMap<>();
-            timePeriod.put("startTime", startTimeTimestamp);
-            timePeriod.put("endTime", endTimeTimestamp);
-            times.add(timePeriod);
-            dateMap.put("times", times);
+        // 创建 TimeTable 列表
+        List<SelectTimeTable> formatTimetable = new ArrayList<>();
 
-            dateTimeMap.put(dateTimestamp, dateMap);
+        // 遍历指定日期范围，生成每一天的 TimeTable
+        for (LocalDate date = today; !date.isAfter(todayAfterDayLen); date = date.plusDays(1)) {
+            // 获取当天的繁忙时间段（busy）
+            LocalDate finalDate = date;
+            List<SelectPeriod> busyPeriods = busyEvents.stream()
+                    .filter(event -> event.getAppointmentDate().equals(finalDate))
+                    .map(event -> new SelectPeriod(
+                            event.getStartTime().atZone(ZoneOffset.UTC).toInstant().toEpochMilli(),
+                            event.getEndTime().atZone(ZoneOffset.UTC).toInstant().toEpochMilli()
+                    ))
+                    .toList();
+
+            // 初始化当天的可用时间段（available），为整天的工作时间段
+            long startOfDayTimestamp = date.atTime(defaultStartTime).toInstant(ZoneOffset.UTC).toEpochMilli();
+            long endOfDayTimestamp = date.atTime(defaultEndTime).toInstant(ZoneOffset.UTC).toEpochMilli();
+            List<SelectPeriod> availablePeriods = new ArrayList<>();
+            availablePeriods.add(new SelectPeriod(startOfDayTimestamp, endOfDayTimestamp));
+
+            // 从 available 时间段中减去 busy 时间段，得到最终的 available 时间段
+            for (SelectPeriod busy : busyPeriods) {
+                availablePeriods = subtractBusyTimeSegments(availablePeriods, busy);
+            }
+
+            // 创建 TimeTable 对象
+            SelectTimeTable timeTable = new SelectTimeTable();
+            timeTable.setDate(date.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()); // 日期时间戳
+            timeTable.setTimes(availablePeriods);  // 设置当天的可用时间段
+
+            // 添加到时间表列表中
+            formatTimetable.add(timeTable);
         }
-
-        return new ArrayList<>(dateTimeMap.values());
+        return formatTimetable;
     }
+
 
     public boolean createClassroomEvent(String userId,int classroomId, Map<String, Object> time, boolean isMedia, boolean isComputer, boolean isSound, List<String> present, String aim, String events, int state) {
         try {
@@ -360,15 +414,22 @@ public class AppointmentService {
             long startTimeTimestamp = ((Number) time.get("start_time")).longValue();
             long endTimeTimestamp = ((Number) time.get("end_time")).longValue();
 
-            LocalDate appointmentDate =timeUtils.DateFromTimeStamp(dateTimestamp);
-            LocalDateTime startTime = timeUtils.DateTimeFromTimeStamp(startTimeTimestamp);
-            LocalDateTime endTime = timeUtils.DateTimeFromTimeStamp(endTimeTimestamp);
+            // 将日期转换为 LocalDate
+            LocalDate date = Instant.ofEpochSecond(dateTimestamp).atZone(ZoneId.systemDefault()).toLocalDate();
+
+            // 将 start_time 和 end_time 转换为 LocalTime
+            LocalTime startTime = Instant.ofEpochSecond(startTimeTimestamp).atZone(ZoneId.systemDefault()).toLocalTime();
+            LocalTime endTime = Instant.ofEpochSecond(endTimeTimestamp).atZone(ZoneId.systemDefault()).toLocalTime();
+
+            // 将 LocalDate 和 LocalTime 组合为 LocalDateTime
+            LocalDateTime startDateTime = LocalDateTime.of(date, startTime);
+            LocalDateTime endDateTime = LocalDateTime.of(date, endTime);
 
             ClassroomEvent classroomEvent = new ClassroomEvent();
             classroomEvent.setClassroom(classroomId);
-            classroomEvent.setAppointmentDate(appointmentDate);
-            classroomEvent.setStartTime(startTime);
-            classroomEvent.setEndTime(endTime);
+            classroomEvent.setAppointmentDate(date);
+            classroomEvent.setStartTime(startDateTime);
+            classroomEvent.setEndTime(endDateTime);
             classroomEvent.setApplicant(userId);
             classroomEvent.setIsMedia(isMedia);
             classroomEvent.setIsComputer(isComputer);
@@ -378,16 +439,21 @@ public class AppointmentService {
             classroomEvent.setEvents(events);
             classroomEvent.setState(state);
 
-            appointmentMapper.insertClassroomEvent(classroomEvent);
+            List<ClassroomEvent> conflictingEvents = appointmentMapper.checkTimeConflictInClassroom(userId, date, startDateTime, endDateTime);
 
-            int eventId = classroomEvent.getId();
-            for (String studentId : present) {
-                appointmentMapper.insertClassroomEventPresent(eventId, studentId);
+            if (!conflictingEvents.isEmpty()) {
+                return false;
+            } else {
+                appointmentMapper.insertClassroomEvent(classroomEvent);
+
+                int eventId = classroomEvent.getId();
+                for (String studentId : present) {
+                    appointmentMapper.insertClassroomEventPresent(eventId, studentId);
+                }
+
+                return true;
             }
-
-            return true;
         } catch (Exception e) {
-            e.printStackTrace();
             return false;
         }
     }

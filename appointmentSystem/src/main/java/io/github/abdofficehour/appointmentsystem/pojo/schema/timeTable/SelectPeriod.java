@@ -10,10 +10,10 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 public class SelectPeriod {
-    private Long start;
-    private Long end;
+    private Long startTime;
+    private Long endTime;
     public SelectPeriod(long start, long end) {
-        this.start = start;
-        this.end = end;
+        this.startTime = start;
+        this.endTime = end;
     }
 }

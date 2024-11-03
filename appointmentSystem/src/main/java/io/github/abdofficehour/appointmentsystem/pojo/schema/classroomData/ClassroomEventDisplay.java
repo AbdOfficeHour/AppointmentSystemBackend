@@ -12,7 +12,8 @@ import java.time.LocalDateTime;
 @Data
 @Setter
 @Getter
-public class ClassroomEventDisplay {private int id;
+public class ClassroomEventDisplay {
+    private int id;
     private LocalDate appointmentDate;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
@@ -28,4 +29,5 @@ public class ClassroomEventDisplay {private int id;
 
     private String ClassroomName;
     private String applicantName;
+    private String approveName;
 }

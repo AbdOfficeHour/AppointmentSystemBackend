@@ -49,6 +49,8 @@ public interface AppointmentMapper {
     //下面是ClassRoom的相关mapper接口设计
     List<ClassroomEventDisplay> findClassroomEventsByIdAndTime(@Param("id") String id, @Param("time") int time);
 
+    List<ClassroomEventDisplay> findClassroomEventsByIdAndTimeApprove(@Param("id") String id);
+
     List<ClassroomEventDisplay> findClassroomEvents(@Param("userId") String userId, @Param("time") int time);
 
     List<String> searchClassroomById(int id);//这个是用于get时找同伙用的
@@ -66,6 +68,8 @@ public interface AppointmentMapper {
     int findClassroomIdByName(@Param("classroomName") String classroomName);
 
     void insertClassroomEvent(@Param("classroomEvent") ClassroomEvent classroomEvent);
+
+    List<ClassroomEvent> checkTimeConflictInClassroom(@Param("applicant") String applicant,@Param("appointmentDate") LocalDate appointmentDate, @Param("startTime") LocalDateTime startTime, @Param("endTime") LocalDateTime endTime);
 
     void insertClassroomEventPresent(@Param("eventId") int eventId, @Param("studentId") String studentId);
 

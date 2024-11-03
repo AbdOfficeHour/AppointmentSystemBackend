@@ -120,23 +120,56 @@
 
     <select id="findClassroomEventsByIdAndTime" resultType="io.github.abdofficehour.appointmentsystem.pojo.schema.classroomData.ClassroomEventDisplay">
         select
-            ce.id,
-            ce.appointmentDate,
-            ce.startTime,
-            ce.endTime,
-            ce.applicant,
-            ce.classroom,
-            ce.isMedia,
-            ce.isComputer,
-            ce.isSound,
-            ce.aim,
-            ce.events,
-            ce.state,
-            c.classroom_name as ClassroomName
+            ce.id as id,
+            ce.appointmentDate as appointmentDate,
+            ce.startTime as startTime,
+            ce.endTime as endTime,
+            ce.applicant as applicant,
+            ce.classroom as classroom,
+            ce.isMedia as isMedia,
+            ce.isComputer as isComputer,
+            ce.isSound as isSound,
+            ce.aim as aim,
+            ce.events as events,
+            ce.approve as approve,
+            ce.state as state,
+            c.classroom_name as ClassroomName,
+            applicantInfo.username as approveName,
+            approveInfo.username as approveName
         from classroomevent ce
         left join classroom c on ce.classroom = c.id
+        left join userinfo applicantInfo on ce.applicant = applicantInfo.id
+        left join userinfo approveInfo on ce.approve = approveInfo.id
         WHERE ce.applicant = #{id}
           AND ce.appointmentDate >= DATE_SUB(CURRENT_DATE, INTERVAL #{time} MONTH)
+          AND ce.state IN (2,3,4,5,7)
+        order by ce.appointmentDate desc
+    </select>
+
+    <select id="findClassroomEventsByIdAndTimeApprove" resultType="io.github.abdofficehour.appointmentsystem.pojo.schema.classroomData.ClassroomEventDisplay">
+        select
+            ce.id as id,
+            ce.appointmentDate as appointmentDate,
+            ce.startTime as startTime,
+            ce.endTime as endTime,
+            ce.applicant as applicant,
+            ce.classroom as classroom,
+            ce.isMedia as isMedia,
+            ce.isComputer as isComputer,
+            ce.isSound as isSound,
+            ce.aim as aim,
+            ce.events as events,
+            ce.approve as approve,
+            ce.state as state,
+            c.classroom_name as ClassroomName,
+            applicantInfo.username as approveName,
+            approveInfo.username as approveName
+        from classroomevent ce
+                 left join classroom c on ce.classroom = c.id
+                 left join userinfo applicantInfo on ce.applicant = applicantInfo.id
+                 left join userinfo approveInfo on ce.approve = approveInfo.id
+        WHERE ce.applicant = #{id}
+          AND ce.state IN (6)
         order by ce.appointmentDate desc
     </select>
 
@@ -241,6 +274,16 @@
                 #{classroomEvent.approve},
                 #{classroomEvent.state})
     </insert>
+
+    <select id="checkTimeConflictInClassroom" resultType="io.github.abdofficehour.appointmentsystem.pojo.data.ClassroomEvent">
+        SELECT *
+        FROM classroomevent
+        WHERE applicant = #{applicant}
+          AND appointmentDate = #{appointmentDate}
+          AND (
+            (startTime &lt; #{endTime} AND endTime &gt; #{startTime})
+            )
+    </select>
 
     <!-- 插入参与成员记录 -->
     <insert id="insertClassroomEventPresent">
